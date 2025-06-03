@@ -1,4 +1,7 @@
+#include <stdio.h>
+#include <stdbool.h>
 #include "iGraphics.h"
+#include "iSound.h"
 float dx;
 float dy;
 int paddle_x = 450;
@@ -6,12 +9,14 @@ int paddle_y = 15;
 int paddle_height = 15;
 int paddle_width = 100;
 int ball_radius = 10;
-int lives = 3;
+int lives = 1;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
-int dbx;
-int main(int argc, char *argv[]);
+int dbx = 0;
+bool isGameOver = false;
+int gameState = 1;
+void gameOver(void);
 /*
 function iDraw() is called again and again by the system.
 */
@@ -19,27 +24,42 @@ void iDraw()
 {
     // place your drawing codes here
     iClear();
-    iSetColor(85, 115, 250);
-    iFilledRectangle(paddle_x + dbx, paddle_y, paddle_width, paddle_height);
-    iSetColor(213, 105, 43);
-    iFilledCircle(ball_x, ball_y, ball_radius);
-    iSetColor(255, 0, 0);
-    iText(25, 730, "Lives: ", GLUT_BITMAP_HELVETICA_18);
 
-    if (lives == 3)
+    if (gameState == 1)
     {
-        iText(75, 730, "3", GLUT_BITMAP_HELVETICA_18);
+        iSetColor(85, 115, 250);
+        iFilledRectangle(paddle_x + dbx, paddle_y, paddle_width, paddle_height);
+        iSetColor(213, 105, 43);
+        iFilledCircle(ball_x, ball_y, ball_radius);
+        iSetColor(255, 0, 0);
+        iText(25, 730, "Lives: ", GLUT_BITMAP_HELVETICA_18);
+
+        if (lives == 3)
+        {
+            iText(75, 730, "3", GLUT_BITMAP_HELVETICA_18);
+        }
+        else if (lives == 2)
+        {
+            iText(75, 730, "2", GLUT_BITMAP_HELVETICA_18);
+        }
+        else if (lives == 1)
+        {
+            iText(75, 730, "1", GLUT_BITMAP_HELVETICA_18);
+        }
+        iText(890, 730, "Score", GLUT_BITMAP_HELVETICA_18);
+        iText(950, 730, "2000", GLUT_BITMAP_HELVETICA_18);
+        if (lives < 1 && !isGameOver)
+        {
+
+            iPlaySound("assets/sounds/mus_gameover.wav", true);
+            isGameOver = true;
+            gameState = 2;
+        }
     }
-    else if (lives == 2)
+    else if (gameState == 2)
     {
-        iText(75, 730, "2", GLUT_BITMAP_HELVETICA_18);
+        iShowImage(0, 0, "assets/images/gameover1.jpg");
     }
-    else if (lives == 1)
-    {
-        iText(75, 730, "1", GLUT_BITMAP_HELVETICA_18);
-    }
-    iText(890, 730, "Score", GLUT_BITMAP_HELVETICA_18);
-    iText(950, 730, "2000", GLUT_BITMAP_HELVETICA_18);
 }
 
 /*
@@ -122,8 +142,8 @@ void iKeyboard(unsigned char key)
     // place your codes for other keys here
     case ' ':
     {
-        dx = 5;
-        dy = 5.5;
+        dx = 10;
+        dy = 10;
     }
     default:
         break;
@@ -185,6 +205,14 @@ int main(int argc, char *argv[])
     iSetTimer(15, ballMotion);
 
     // place your own initialization codes here.
-    iInitialize(1000, 750, "nahid");
+    iInitializeSound();
+    iInitialize(1000, 750, "Breaking Ball");
     return 0;
+}
+
+void gameOver(void)
+{
+    iSetColor(255, 0, 0);
+    iText(500, 350, "GAME OVER");
+    iPlaySound("assets/sounds/mus_gameover.wav", true);
 }
