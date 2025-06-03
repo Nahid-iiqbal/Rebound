@@ -140,8 +140,12 @@ void iKeyboard(unsigned char key)
         // place your codes for other keys here
         case ' ':
         {
-            dx = 10;
-            dy = 10;
+            if (dx == 0 && dy == 0)
+            {
+
+                dx = 5;
+                dy = 5.5;
+            }
         }
         default:
             break;
@@ -156,20 +160,25 @@ void ballMotion()
     if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
     {
         dx *= (-1);
+        iPlaySound("assets/sounds/bounce.wav");
     }
 
     if (ball_y + ball_radius > screen_height)
     {
         dy *= (-1);
+        iPlaySound("assets/sounds/bounce.wav");
     }
 
-    if (((ball_x >= (450 + dbx)) && ball_x <= (550 + dbx)) && ball_y <= (paddle_height + paddle_y + ball_radius))
+    if (ball_x > paddle_x + dbx && ball_x < paddle_x + paddle_width + dbx && ball_y + ball_radius < paddle_height + paddle_y + ball_radius)
     {
         dy *= (-1);
+        if (dx != 0 && dy != 0)
+            iPlaySound("assets/sounds/bounce.wav");
     }
     if (ball_y < paddle_y)
     {
         lives--;
+        iPlaySound("assets/sounds/lifelost.wav");
         dbx = 0;
         dx = dy = 0;
         ball_x = paddle_x + dbx + paddle_width / 2;
