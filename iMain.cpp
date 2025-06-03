@@ -4,18 +4,22 @@
 #include "iSound.h"
 float dx;
 float dy;
-int paddle_x = 450;
+int screen_width = 1000;
+int screen_height = 700;
+int paddle_width = 130;
+int paddle_height = 30;
+int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
-int paddle_height = 15;
-int paddle_width = 100;
 int ball_radius = 10;
-int lives = 1;
+int lives = 3;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
 int dbx = 0;
 bool isGameOver = false;
 int gameState = 1;
+char scoreText[10];
+char lifeText[10];
 void gameOver(void);
 /*
 function iDraw() is called again and again by the system.
@@ -27,27 +31,16 @@ void iDraw()
 
     if (gameState == 1)
     {
-        iSetColor(85, 115, 250);
-        iFilledRectangle(paddle_x + dbx, paddle_y, paddle_width, paddle_height);
+        iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
         iSetColor(255, 0, 0);
-        iText(25, 730, "Lives: ", GLUT_BITMAP_HELVETICA_18);
-
-        if (lives == 3)
-        {
-            iText(75, 730, "3", GLUT_BITMAP_HELVETICA_18);
-        }
-        else if (lives == 2)
-        {
-            iText(75, 730, "2", GLUT_BITMAP_HELVETICA_18);
-        }
-        else if (lives == 1)
-        {
-            iText(75, 730, "1", GLUT_BITMAP_HELVETICA_18);
-        }
-        iText(890, 730, "Score", GLUT_BITMAP_HELVETICA_18);
-        iText(950, 730, "2000", GLUT_BITMAP_HELVETICA_18);
+        iTextBold(50, screen_height - 20, "SCORE: ", GLUT_BITMAP_9_BY_15);
+        sprintf(scoreText, "%d", score);
+        iTextBold(150, screen_height - 20, scoreText, GLUT_BITMAP_9_BY_15);
+        iTextBold(875, screen_height - 20, "LIVES: ", GLUT_BITMAP_9_BY_15);
+        sprintf(lifeText, "%d", lives);
+        iTextBold(950, screen_height - 20, lifeText, GLUT_BITMAP_9_BY_15);
         if (lives < 1 && !isGameOver)
         {
 
@@ -110,43 +103,49 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    switch (key)
+    if (gameState == 1)
     {
-    case 'd':
-        dbx += 20;
-        if ((450 + dbx) >= 900)
-            dbx -= 20;
-        if (dx == 0 && dy == 0)
+
+        switch (key)
         {
-            ball_x += 20;
-            if (ball_x >= (900 + paddle_width / 2))
-            {
-                ball_x -= 20;
-            }
-        }
-        break;
-    case 'a':
-        dbx -= 20;
-        if ((450 + dbx) <= 0)
+        case 'd':
+        case 'D':
             dbx += 20;
-        if (dx == 0 && dy == 0)
-        {
-            ball_x -= 20;
-            if (ball_x <= paddle_width / 2)
+            if ((450 + dbx) >= 900)
+                dbx -= 20;
+            if (dx == 0 && dy == 0)
             {
                 ball_x += 20;
+                if (ball_x >= (900 + paddle_width / 2))
+                {
+                    ball_x -= 20;
+                }
             }
-        }
+            break;
+        case 'a':
+        case 'A':
+            dbx -= 20;
+            if ((450 + dbx) <= 0)
+                dbx += 20;
+            if (dx == 0 && dy == 0)
+            {
+                ball_x -= 20;
+                if (ball_x <= paddle_width / 2)
+                {
+                    ball_x += 20;
+                }
+            }
 
-        break;
-    // place your codes for other keys here
-    case ' ':
-    {
-        dx = 10;
-        dy = 10;
-    }
-    default:
-        break;
+            break;
+        // place your codes for other keys here
+        case ' ':
+        {
+            dx = 10;
+            dy = 10;
+        }
+        default:
+            break;
+        }
     }
 }
 void ballMotion()
@@ -154,17 +153,17 @@ void ballMotion()
     ball_x += dx;
     ball_y += dy;
 
-    if (ball_x + ball_radius > 1000 || ball_x - ball_radius < 0)
+    if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
     {
         dx *= (-1);
     }
 
-    if (ball_y + ball_radius > 750)
+    if (ball_y + ball_radius > screen_height)
     {
         dy *= (-1);
     }
 
-    if (((ball_x > (450 + dbx)) && ball_x < (550 + dbx)) && ball_y < (paddle_height + paddle_y + ball_radius))
+    if (((ball_x >= (450 + dbx)) && ball_x <= (550 + dbx)) && ball_y <= (paddle_height + paddle_y + ball_radius))
     {
         dy *= (-1);
     }
@@ -206,7 +205,7 @@ int main(int argc, char *argv[])
 
     // place your own initialization codes here.
     iInitializeSound();
-    iInitialize(1000, 750, "Breaking Ball");
+    iInitialize(screen_width, screen_height, "Breaking Ball");
     return 0;
 }
 
