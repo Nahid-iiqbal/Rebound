@@ -5,7 +5,7 @@
 float dx;
 float dy;
 int screen_width = 1000;
-int screen_height = 700;
+int screen_height = 750;
 int paddle_width = 130;
 int paddle_height = 30;
 int paddle_x = screen_width / 2 - paddle_width / 2;
@@ -31,16 +31,19 @@ void iDraw()
 
     if (gameState == 1)
     {
+        iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
         iSetColor(255, 0, 0);
-        iTextBold(50, screen_height - 20, "SCORE: ", GLUT_BITMAP_9_BY_15);
+        // iTextBold(50, screen_height - 20, "SCORE: ", GLUT_BITMAP_9_BY_15);
+        iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
-        iTextBold(150, screen_height - 20, scoreText, GLUT_BITMAP_9_BY_15);
-        iTextBold(875, screen_height - 20, "LIVES: ", GLUT_BITMAP_9_BY_15);
+        iTextBold(150, screen_height - 27, scoreText, GLUT_BITMAP_HELVETICA_18);
+        // iTextBold(875, screen_height - 20, "LIVES: ", GLUT_BITMAP_9_BY_15);
+        iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
-        iTextBold(950, screen_height - 20, lifeText, GLUT_BITMAP_9_BY_15);
+        iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         if (lives < 1 && !isGameOver)
         {
 
@@ -61,7 +64,14 @@ function iMouseMove() is called when the user moves the mouse.
 */
 void iMouseMove(int mx, int my)
 {
-    // place your codes hfloat
+    // if (mx > paddle_width / 2 && mx < screen_width - paddle_width / 2)
+    // {
+    //     dbx = (mx - paddle_width / 2);
+    //     if (dx == 0 && dy == 0)
+    //     {
+    //         ball_x = mx;
+    //     }
+    // }
 }
 
 /*5unction iMouseDrag() is called when the user presses and drags the mouse.
@@ -80,7 +90,12 @@ void iMouse(int button, int state, int mx, int my)
 {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
     {
-        // place your codes here
+        if (dx == 0 && dy == 0)
+        {
+
+            dx = 5;
+            dy = 5.5;
+        }
     }
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
@@ -111,12 +126,12 @@ void iKeyboard(unsigned char key)
         case 'd':
         case 'D':
             dbx += 20;
-            if ((450 + dbx) >= 900)
+            if ((paddle_x + dbx) >= screen_width - paddle_width)
                 dbx -= 20;
             if (dx == 0 && dy == 0)
             {
                 ball_x += 20;
-                if (ball_x >= (900 + paddle_width / 2))
+                if (ball_x >= (screen_width - paddle_width / 2))
                 {
                     ball_x -= 20;
                 }
@@ -125,7 +140,7 @@ void iKeyboard(unsigned char key)
         case 'a':
         case 'A':
             dbx -= 20;
-            if ((450 + dbx) <= 0)
+            if ((paddle_x + dbx) <= 0)
                 dbx += 20;
             if (dx == 0 && dy == 0)
             {
@@ -172,6 +187,7 @@ void ballMotion()
     if (ball_x > paddle_x + dbx && ball_x < paddle_x + paddle_width + dbx && ball_y + ball_radius < paddle_height + paddle_y + ball_radius)
     {
         dy *= (-1);
+        score += 20;
         if (dx != 0 && dy != 0)
             iPlaySound("assets/sounds/bounce.wav");
     }
