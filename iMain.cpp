@@ -1,17 +1,21 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 #include "iGraphics.h"
 #include "iSound.h"
+float pi = 3.14159;
 float dx;
 float dy;
+int bgchk = 1;
+float ball_spd = 10;
 int screen_width = 1000;
 int screen_height = 750;
-int paddle_width = 130;
-int paddle_height = 30;
+int paddle_width = 100;
+int paddle_height = 10;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
-int ball_radius = 10;
-int lives = 3;
+int ball_radius = 6;
+int lives = 1;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
@@ -20,6 +24,7 @@ bool isGameOver = false;
 int gameState = 1;
 char scoreText[10];
 char lifeText[10];
+
 void gameOver(void);
 /*
 function iDraw() is called again and again by the system.
@@ -44,17 +49,28 @@ void iDraw()
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
+        if (bgchk)
+        {
+            iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+            bgchk = 0;
+        }
         if (lives < 1 && !isGameOver)
         {
 
-            iPlaySound("assets/sounds/mus_gameover.wav", true);
+            iPlaySound("assets/sounds/mus_gameover.wav", false);
             isGameOver = true;
             gameState = 2;
         }
     }
     else if (gameState == 2)
     {
+        iStopSound(0);
         iShowImage(0, 0, "assets/images/gameover1.jpg");
+        iSetColor(0, 0, 0);
+        iFilledRectangle(10, 10, 980, 70);
+        iShowImage(63, 20, "assets/images/mainmenublue.png");
+        iShowImage(375, 20, "assets/images/tryagainblue.png");
+        iShowImage(687, 20, "assets/images/exitblue.png");
     }
 }
 
@@ -88,15 +104,19 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+    if (gameState == 1)
     {
-        if (dx == 0 && dy == 0)
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
+            if (dx == 0 && dy == 0)
+            {
 
-            dx = 5;
-            dy = 5.5;
+                dx = ball_spd * cos(pi / 4);
+                dy = ball_spd * sin(pi / 4);
+            }
         }
     }
+
     if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
     {
         // place your codes here
@@ -121,49 +141,53 @@ void iKeyboard(unsigned char key)
     if (gameState == 1)
     {
 
-        switch (key)
+        if (gameState == 1)
         {
-        case 'd':
-        case 'D':
-            dbx += 20;
-            if ((paddle_x + dbx) >= screen_width - paddle_width)
-                dbx -= 20;
-            if (dx == 0 && dy == 0)
+
+            switch (key)
             {
-                ball_x += 20;
-                if (ball_x >= (screen_width - paddle_width / 2))
-                {
-                    ball_x -= 20;
-                }
-            }
-            break;
-        case 'a':
-        case 'A':
-            dbx -= 20;
-            if ((paddle_x + dbx) <= 0)
+            case 'd':
+            case 'D':
                 dbx += 20;
-            if (dx == 0 && dy == 0)
-            {
-                ball_x -= 20;
-                if (ball_x <= paddle_width / 2)
+                if ((paddle_x + dbx) >= screen_width - paddle_width)
+                    dbx -= 20;
+                if (dx == 0 && dy == 0)
                 {
                     ball_x += 20;
+                    if (ball_x >= (screen_width - paddle_width / 2))
+                    {
+                        ball_x -= 20;
+                    }
+                }
+                break;
+            case 'a':
+            case 'A':
+                dbx -= 20;
+                if ((paddle_x + dbx) <= 0)
+                    dbx += 20;
+                if (dx == 0 && dy == 0)
+                {
+                    ball_x -= 20;
+                    if (ball_x <= paddle_width / 2)
+                    {
+                        ball_x += 20;
+                    }
+                }
+
+                break;
+            // place your codes for other keys here
+            case ' ':
+            {
+                if (dx == 0 && dy == 0)
+                {
+
+                    dx = ball_spd * cos(pi / 4);
+                    dy = ball_spd * sin(pi / 4);
                 }
             }
-
-            break;
-        // place your codes for other keys here
-        case ' ':
-        {
-            if (dx == 0 && dy == 0)
-            {
-
-                dx = 5;
-                dy = 5.5;
+            default:
+                break;
             }
-        }
-        default:
-            break;
         }
     }
 }
@@ -171,6 +195,8 @@ void ballMotion()
 {
     ball_x += dx;
     ball_y += dy;
+    float position = ((paddle_x + dbx + paddle_width / 2) - ball_x) / (paddle_width / 2);
+    float angle = (pi / 2) + position * (pi / 3);
 
     if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
     {
@@ -184,12 +210,14 @@ void ballMotion()
         iPlaySound("assets/sounds/bounce.wav");
     }
 
-    if (ball_x > paddle_x + dbx && ball_x < paddle_x + paddle_width + dbx && ball_y + ball_radius < paddle_height + paddle_y + ball_radius)
+    if (dx != 0 && dy != 0 && ball_x >= paddle_x + dbx && ball_x <= paddle_x + paddle_width + dbx && ball_y - ball_radius <= paddle_height + paddle_y && ball_y - ball_radius >= paddle_y)
     {
-        dy *= (-1);
         score += 20;
+        ball_y = paddle_y + paddle_height + ball_radius;
         if (dx != 0 && dy != 0)
             iPlaySound("assets/sounds/bounce.wav");
+        dx = ball_spd * cos(angle);
+        dy = ball_spd * sin(angle);
     }
     if (ball_y < paddle_y)
     {
@@ -230,10 +258,6 @@ int main(int argc, char *argv[])
 
     // place your own initialization codes here.
     iInitializeSound();
-    if (gameState == 1)
-    {
-        iPlaySound("assets/sounds/gamebg1.wav", true, 50);
-    }
     iInitialize(screen_width, screen_height, "Breaking Ball");
     return 0;
 }
