@@ -3,6 +3,8 @@
 #include <math.h>
 #include "iGraphics.h"
 #include "iSound.h"
+
+// variables///////////////////////////////////////////////////////////
 float pi = 3.14159;
 float dx;
 float dy;
@@ -24,14 +26,14 @@ bool isGameOver = false;
 int gameState = 1;
 char scoreText[10];
 char lifeText[10];
+int gomcheck = 0;
 
-void gameOver(void);
+///////////////////////////////////////////////////////////////
 /*
 function iDraw() is called again and again by the system.
 */
 void iDraw()
 {
-    // place your drawing codes here
     iClear();
 
     if (gameState == 1)
@@ -41,11 +43,9 @@ void iDraw()
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
         iSetColor(255, 0, 0);
-        // iTextBold(50, screen_height - 20, "SCORE: ", GLUT_BITMAP_9_BY_15);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
         iTextBold(150, screen_height - 27, scoreText, GLUT_BITMAP_HELVETICA_18);
-        // iTextBold(875, screen_height - 20, "LIVES: ", GLUT_BITMAP_9_BY_15);
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
@@ -66,11 +66,23 @@ void iDraw()
     {
         iStopSound(0);
         iShowImage(0, 0, "assets/images/gameover1.jpg");
-        iSetColor(0, 0, 0);
+        iSetTransparentColor(0, 0, 0, 0.7);
         iFilledRectangle(10, 10, 980, 70);
         iShowImage(63, 20, "assets/images/mainmenublue.png");
         iShowImage(375, 20, "assets/images/tryagainblue.png");
         iShowImage(687, 20, "assets/images/exitblue.png");
+        if (gomcheck == 0)
+            iShowImage(63, 20, "assets/images/mainmenured.png");
+        if (gomcheck == 1)
+            iShowImage(375, 20, "assets/images/tryagainred.png");
+        if (gomcheck == 2)
+            iShowImage(687, 20, "assets/images/exitred.png");
+
+        iSetColor(0, 0, 0);
+        iFilledRectangle(265, 150, 500, 70);
+        iShowImage(345, 160, "assets/images/scoregom.png");
+        iSetColor(255, 255, 255);
+        iTextAdvanced(550, 167, scoreText, 0.3, 4);
     }
 }
 
@@ -88,6 +100,15 @@ void iMouseMove(int mx, int my)
     //         ball_x = mx;
     //     }
     // }
+    if (gameState == 2)
+    {
+        if (mx >= 63 && mx <= 313)
+            gomcheck = 0;
+        if (mx >= 375 && mx <= 625)
+            gomcheck = 1;
+        if (mx >= 687 && mx <= 937)
+            gomcheck = 2;
+    }
 }
 
 /*5unction iMouseDrag() is called when the user presses and drags the mouse.
@@ -190,6 +211,23 @@ void iKeyboard(unsigned char key)
             }
         }
     }
+    if (gameState == 2)
+    {
+        switch (key)
+        {
+        case 'a':
+        case 'A':
+            gomcheck += 2;
+            break;
+        case 'd':
+        case 'D':
+            gomcheck += 1;
+            break;
+        default:
+            break;
+        }
+        gomcheck = gomcheck % 3;
+    }
 }
 void ballMotion()
 {
@@ -260,11 +298,4 @@ int main(int argc, char *argv[])
     iInitializeSound();
     iInitialize(screen_width, screen_height, "Breaking Ball");
     return 0;
-}
-
-void gameOver(void)
-{
-    iSetColor(255, 0, 0);
-    iText(500, 350, "GAME OVER");
-    iPlaySound("assets/sounds/mus_gameover.wav", true);
 }
