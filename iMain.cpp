@@ -29,6 +29,9 @@ char lifeText[10];
 int gomcheck = 0;
 
 ///////////////////////////////////////////////////////////////
+void resetGame(void);
+///////////////////////////////////////////////////////////////
+
 /*
 function iDraw() is called again and again by the system.
 */
@@ -138,9 +141,28 @@ void iMouse(int button, int state, int mx, int my)
         }
     }
 
-    if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
+    //
+    if (gameState == 2)
     {
-        // place your codes here
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+        {
+            if (gomcheck == 0)
+            {
+                gameState = 0;
+                iStopAllSounds();
+            }
+            else if (gomcheck == 1)
+            {
+                gameState = 1;
+                isGameOver = false;
+                iStopAllSounds();
+                resetGame();
+            }
+            else if (gomcheck == 2)
+            {
+                exit(0);
+            }
+        }
     }
 }
 
@@ -227,6 +249,32 @@ void iKeyboard(unsigned char key)
             break;
         }
         gomcheck = gomcheck % 3;
+
+        switch (key)
+        {
+        case '\r':
+        case ' ':
+            if (gomcheck == 0)
+            {
+                gameState = 0;
+                iStopAllSounds();
+            }
+            else if (gomcheck == 1)
+            {
+                gameState = 1;
+                isGameOver = false;
+                iStopAllSounds();
+                resetGame();
+            }
+            else if (gomcheck == 2)
+            {
+                exit(0);
+            }
+            break;
+
+        default:
+            break;
+        }
     }
 }
 void ballMotion()
@@ -289,6 +337,17 @@ void iSpecialKeyboard(unsigned char key)
     }
 }
 
+void resetGame(void)
+{
+    dbx = 0;
+    dx = dy = 0;
+    ball_x = paddle_x + dbx + paddle_width / 2;
+    ball_y = paddle_height + paddle_y + ball_radius;
+    lives = 1;
+    score = 0;
+    gameState = 1;
+    iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+}
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
