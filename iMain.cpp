@@ -230,6 +230,10 @@ int main(int argc, char *argv[])
 
     // place your own initialization codes here.
     iInitializeSound();
+    if (gameState == 1)
+    {
+        iPlaySound("assets/sounds/gamebg1.wav", true, 50);
+    }
     iInitialize(screen_width, screen_height, "Breaking Ball");
     return 0;
 }
