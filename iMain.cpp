@@ -95,12 +95,15 @@ function iMouseMove() is called when the user moves the mouse.
 */
 void iMouseMove(int mx, int my)
 {
-    // if (mx > paddle_width / 2 && mx < screen_width - paddle_width / 2)
-    // {
-    //     dbx = (mx - paddle_width / 2);
-    //     if (dx == 0 && dy == 0)
+    // if(gameState==1){
+
+    //     if (mx > paddle_width / 2 && mx < screen_width - paddle_width / 2)
     //     {
-    //         ball_x = mx;
+    //         dbx = (mx - paddle_width / 2);
+    //         if (dx == 0 && dy == 0)
+    //         {
+    //             ball_x = mx;
+    //         }
     //     }
     // }
     if (gameState == 2)
