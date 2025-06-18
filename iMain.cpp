@@ -23,13 +23,31 @@ float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
 int dbx = 0;
 bool isGameOver = false;
-int gameState = 1;
+int gameState = 0;
 char scoreText[10];
 char lifeText[10];
 int gomcheck = 0;
 
+int max_menu_optn = 1;
+int selected_menu_idx = 1; // please start from 1 (not 0) for this ;)
+
+/*
+gamestate:
+0 = main menu
+1 = game
+2 = game over (i guess)
+3 = Controls menu
+
+110 = <main_game><level 1><base>
+100 = <main_game><paused>  [new experimental notation -rafid]
+*/
+
 ///////////////////////////////////////////////////////////////
 void resetGame(void);
+
+void mainMenu(void);
+void controlsMenu(void);
+void pauseMenu(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -39,7 +57,35 @@ void iDraw()
 {
     iClear();
 
-    if (gameState == 1)
+    if (gameState == 0)
+    {
+
+        mainMenu();
+        iSetColor(255, 255, 255);
+
+        if (selected_menu_idx == 1)
+        {
+            iFilledCircle(300, 500, 5);
+        }
+
+        else if (selected_menu_idx == 2)
+        {
+            iFilledCircle(300, 450, 5);
+        }
+
+        else if (selected_menu_idx == 3)
+        {
+            iFilledCircle(300, 400, 5);
+        }
+
+        else if (selected_menu_idx == 0)
+        {
+            iFilledCircle(300, 500, 5);
+            selected_menu_idx = 1;
+        }
+    }
+
+    if (gameState == 110)
     {
         iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
@@ -59,12 +105,19 @@ void iDraw()
         }
         if (lives < 1 && !isGameOver)
         {
-
             iPlaySound("assets/sounds/mus_gameover.wav", false);
             isGameOver = true;
             gameState = 2;
         }
     }
+
+    else if (gameState == 100)
+    {
+        pauseMenu();
+        iPauseSound(0);
+    }
+    
+    
     else if (gameState == 2)
     {
         iStopSound(0);
@@ -86,6 +139,22 @@ void iDraw()
         iShowImage(345, 160, "assets/images/scoregom.png");
         iSetColor(255, 255, 255);
         iTextAdvanced(550, 167, scoreText, 0.3, 4);
+    }
+
+    else if (gameState == 3)
+    {
+        controlsMenu();
+        iSetColor(255,255,255);
+        if (selected_menu_idx == 1){
+            iFilledCircle(300,350,5);
+        }
+        if (selected_menu_idx == 2){
+            iFilledCircle(300,300,5);
+        }
+        else {
+            iFilledCircle(300,350,5);
+            selected_menu_idx = 1;
+        }
     }
 }
 
@@ -115,6 +184,26 @@ void iMouseMove(int mx, int my)
         if (mx >= 687 && mx <= 937)
             gomcheck = 2;
     }
+
+    if (gameState == 3)
+    {
+        controlsMenu();
+        iSetColor(255, 255, 255);
+        if (selected_menu_idx == 1)
+        {
+            iFilledCircle(300, 350, 5);
+        }
+
+        if (selected_menu_idx == 2)
+        {
+            iFilledCircle(300, 300, 5);
+        }
+        else
+        {
+            iFilledCircle(300, 350, 5);
+            selected_menu_idx = 1;
+        }
+    }
 }
 
 /*5unction iMouseDrag() is called when the user presses and drags the mouse.
@@ -131,7 +220,7 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
-    if (gameState == 1)
+    if (gameState == 110)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
@@ -156,7 +245,7 @@ void iMouse(int button, int state, int mx, int my)
             }
             else if (gomcheck == 1)
             {
-                gameState = 1;
+                gameState = 110;
                 isGameOver = false;
                 iStopAllSounds();
                 resetGame();
@@ -184,58 +273,122 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    if (gameState == 1)
+    if (gameState == 0) // main menu
+
     {
 
-        if (gameState == 1)
+        switch (key)
+
         {
 
-            switch (key)
+        case 'w':
+            if (selected_menu_idx > 1)
             {
-            case 'd':
-            case 'D':
-                dbx += 20;
-                if ((paddle_x + dbx) >= screen_width - paddle_width)
-                    dbx -= 20;
-                if (dx == 0 && dy == 0)
-                {
-                    ball_x += 20;
-                    if (ball_x >= (screen_width - paddle_width / 2))
-                    {
-                        ball_x -= 20;
-                    }
-                }
-                break;
-            case 'a':
-            case 'A':
-                dbx -= 20;
-                if ((paddle_x + dbx) <= 0)
-                    dbx += 20;
-                if (dx == 0 && dy == 0)
-                {
-                    ball_x -= 20;
-                    if (ball_x <= paddle_width / 2)
-                    {
-                        ball_x += 20;
-                    }
-                }
 
-                break;
-            // place your codes for other keys here
-            case ' ':
+                selected_menu_idx--;
+            }
+
+            break;
+
+        case 's':
+            if (selected_menu_idx < 3)
             {
-                if (dx == 0 && dy == 0)
-                {
 
-                    dx = ball_spd * cos(pi / 4);
-                    dy = ball_spd * sin(pi / 4);
-                }
+                selected_menu_idx++;
             }
-            default:
-                break;
+
+            break;
+
+        case ' ':
+            if (selected_menu_idx == 1)
+
+                gameState = 110;
+
+            else if (selected_menu_idx == 2)
+
+            {
+
+                gameState = 3; // Controls menu
             }
+
+            else if (selected_menu_idx == 3)
+
+                exit(0);
+            selected_menu_idx = 0;
+            break;
+        default:
+            break;
         }
     }
+
+    if (gameState == 110)
+    {
+        switch (key)
+        {
+        case 'd':
+        case 'D':
+            dbx += 20;
+            if ((paddle_x + dbx) >= screen_width - paddle_width)
+                dbx -= 20;
+            if (dx == 0 && dy == 0)
+            {
+                ball_x += 20;
+                if (ball_x >= (screen_width - paddle_width / 2))
+                {
+                    ball_x -= 20;
+                }
+            }
+            break;
+        case 'a':
+        case 'A':
+            dbx -= 20;
+            if ((paddle_x + dbx) <= 0)
+                dbx += 20;
+            if (dx == 0 && dy == 0)
+            {
+                ball_x -= 20;
+                if (ball_x <= paddle_width / 2)
+                {
+                    ball_x += 20;
+                }
+            }
+
+            break;
+        // place your codes for other keys here
+        case ' ':
+        {
+            if (dx == 0 && dy == 0)
+            {
+
+                dx = ball_spd * cos(pi / 4);
+                dy = ball_spd * sin(pi / 4);
+            }
+        }
+        case 27:
+            gameState = 100;
+            iPauseTimer(0);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (gameState == 100)
+    {
+        switch (key)
+        {
+            case ' ':
+                gameState = 110;
+                iResumeTimer(0);
+                iResumeSound(0);
+                break;
+
+            default:
+                break;
+        }
+    }
+
     if (gameState == 2)
     {
         switch (key)
@@ -264,7 +417,7 @@ void iKeyboard(unsigned char key)
             }
             else if (gomcheck == 1)
             {
-                gameState = 1;
+                gameState = 110;
                 isGameOver = false;
                 iStopAllSounds();
                 resetGame();
@@ -273,6 +426,38 @@ void iKeyboard(unsigned char key)
             {
                 exit(0);
             }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (gameState == 3) // controls menu
+    {
+        switch (key)
+        {
+        case 'w':
+            if (selected_menu_idx > 1)
+            {
+                selected_menu_idx--;
+            }
+            break;
+
+        case 's':
+            if (selected_menu_idx < 2)
+            {
+                selected_menu_idx++;
+            }
+            break;
+
+        case ' ':
+            if (selected_menu_idx == 1)
+                gameState = 0;
+            if (selected_menu_idx == 2)
+                exit(0);
+
+            selected_menu_idx = 0;
             break;
 
         default:
@@ -348,7 +533,7 @@ void resetGame(void)
     ball_y = paddle_height + paddle_y + ball_radius;
     lives = 1;
     score = 0;
-    gameState = 1;
+    gameState = 110;
     iPlaySound("assets/sounds/gamebg1.wav", true, 40);
 }
 int main(int argc, char *argv[])
@@ -360,4 +545,32 @@ int main(int argc, char *argv[])
     iInitializeSound();
     iInitialize(screen_width, screen_height, "Breaking Ball");
     return 0;
+}
+
+void mainMenu(void)
+{
+
+    // iShowImage(0, 0, "assets/images/mainmenu.png");
+    iSetColor(255, 255, 255);
+    iText(350, 700, "Do you like BALLS?", GLUT_BITMAP_HELVETICA_18);
+    iText(350, 500, "PLAY GAME");
+    iText(350, 450, "CONTROLS");
+    iText(350, 400, "QUIT");
+}
+
+void controlsMenu(void)
+{
+    iSetColor(255, 255, 255);
+    iText(350, 450, "You don't know how to play DXBALL?", GLUT_BITMAP_HELVETICA_18);
+    iText(450, 500, "LOL NOOB", GLUT_BITMAP_HELVETICA_18);
+    iText(420, 350, "Just wanted to check");
+    iText(360, 300, "I don't wanna play this shit anymore");
+}
+
+void pauseMenu(void)
+{
+    iClear();
+    iSetColor(255,255,255);
+    iText(350, 700, "Game Paused", GLUT_BITMAP_HELVETICA_18);
+    iText(360, 300, "Press Space to continue");
 }
