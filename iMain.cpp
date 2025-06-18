@@ -27,9 +27,8 @@ int gameState = 0;
 char scoreText[10];
 char lifeText[10];
 int gomcheck = 0;
-int pmcheck = 0;
 int max_menu_optn = 1;
-int selected_menu_idx = 1; // please start from 1 (not 0) for this ;)
+int selected_menu_idx = 0;
 
 /*
 gamestate:
@@ -115,19 +114,19 @@ void iDraw()
     {
         pauseMenu();
         iPauseSound(0);
-        if (pmcheck == 1)
+        if (selected_menu_idx == 0)
         {
             iShowImage(50, 435, "assets/images/rsmyl.png");
         }
-        if (pmcheck == 2)
+        if (selected_menu_idx == 1)
         {
-            // iShowImage(50, 435, "assets/images/rsmyl.png");
+            iShowImage(50, 375, "assets/images/opnyl.png");
         }
-        if (pmcheck == 3)
+        if (selected_menu_idx == 2)
         {
             iShowImage(50, 315, "assets/images/exitmmyl.png");
         }
-        if (pmcheck == 4)
+        if (selected_menu_idx == 3)
         {
             iShowImage(50, 255, "assets/images/exitdskyl.png");
         }
@@ -197,19 +196,19 @@ void iMouseMove(int mx, int my)
     {
         if (my < 315 && my > 255)
         {
-            pmcheck = 4;
+            selected_menu_idx = 3;
         }
         else if (my < 375 && my > 315)
         {
-            pmcheck = 3;
+            selected_menu_idx = 2;
         }
         else if (my < 435 && my > 375)
         {
-            pmcheck = 2;
+            selected_menu_idx = 1;
         }
         else if (my < 495 && my > 435)
         {
-            pmcheck = 1;
+            selected_menu_idx = 0;
         }
     }
     if (gameState == 2)
@@ -336,7 +335,7 @@ void iKeyboard(unsigned char key)
 
             break;
 
-        case ' ':
+        case '\r':
             if (selected_menu_idx == 1)
 
                 gameState = 101;
@@ -355,6 +354,50 @@ void iKeyboard(unsigned char key)
             break;
         default:
             break;
+        }
+    }
+
+    if (gameState == 100)
+    {
+        switch (key)
+        {
+        case 'w':
+        case 'W':
+            selected_menu_idx += 3;
+            break;
+        case 's':
+        case 'S':
+            selected_menu_idx++;
+            break;
+        default:
+            break;
+        }
+        selected_menu_idx = selected_menu_idx % 4;
+
+        switch (key)
+        {
+        case '\r':
+
+            if (selected_menu_idx == 0)
+            {
+                gameState = 101;
+                iResumeTimer(0);
+                iResumeSound(0);
+            }
+            if (selected_menu_idx == 1)
+            {
+                gameState = 4;
+            }
+            if (selected_menu_idx == 2)
+            {
+                resetGame();
+                gameState = 0;
+                iStopSound(1);
+            }
+            if (selected_menu_idx == 3)
+            {
+                exit(0);
+            }
         }
     }
 
@@ -400,25 +443,11 @@ void iKeyboard(unsigned char key)
                 dx = ball_spd * cos(pi / 4);
                 dy = ball_spd * sin(pi / 4);
             }
+            break;
         }
         case 27:
             gameState = 100;
             iPauseTimer(0);
-            break;
-
-        default:
-            break;
-        }
-    }
-
-    if (gameState == 100)
-    {
-        switch (key)
-        {
-        case ' ':
-            gameState = 101;
-            iResumeTimer(0);
-            iResumeSound(0);
             break;
 
         default:
@@ -446,7 +475,7 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
         case '\r':
-        case ' ':
+
             if (gomcheck == 0)
             {
                 gameState = 0;
@@ -488,7 +517,7 @@ void iKeyboard(unsigned char key)
             }
             break;
 
-        case ' ':
+        case '\r':
             if (selected_menu_idx == 1)
                 gameState = 0;
             if (selected_menu_idx == 2)
@@ -608,6 +637,6 @@ void pauseMenu(void)
 {
     iShowImage(50, 255, "assets/images/exitdeswh.png");
     iShowImage(50, 315, "assets/images/exitmmwh.png");
-    iShowImage(50, 375, "assets/images/sndon.png");
+    iShowImage(50, 375, "assets/images/opnwh.png");
     iShowImage(50, 435, "assets/images/rsmwh.png");
 }
