@@ -24,6 +24,7 @@ float ball_y = paddle_height + paddle_y + ball_radius;
 int dbx = 0;
 bool isGameOver = false;
 int gameState = 0;
+int gameState = 0;
 char scoreText[10];
 char lifeText[10];
 int gomcheck = 0;
