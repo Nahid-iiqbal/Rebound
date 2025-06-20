@@ -31,12 +31,14 @@ int gomcheck = 0;
 int max_menu_optn = 1;
 int selected_menu_idx = 1; // please start from 1 (not 0) for this ;)
 
+int mainmenu_spacing = 50; 
 /*
 gamestate:
 0 = main menu
-1 = game
+100s = game
 2 = game over (i guess)
-3 = Controls menu
+3 = Help menu
+4 = Options
 
 110 = <main_game><level 1><base>
 100 = <main_game><paused>  [new experimental notation -rafid]
@@ -46,7 +48,7 @@ gamestate:
 void resetGame(void);
 
 void mainMenu(void);
-void controlsMenu(void);
+void helpMenu(void);
 void pauseMenu(void);
 ///////////////////////////////////////////////////////////////
 
@@ -65,17 +67,32 @@ void iDraw()
 
         if (selected_menu_idx == 1)
         {
-            iFilledCircle(300, 500, 5);
+            iFilledCircle(300, mainmenu_spacing*6, 5);
         }
 
         else if (selected_menu_idx == 2)
         {
-            iFilledCircle(300, 450, 5);
+            iFilledCircle(300, mainmenu_spacing*5, 5);
         }
 
         else if (selected_menu_idx == 3)
         {
-            iFilledCircle(300, 400, 5);
+            iFilledCircle(300, mainmenu_spacing*4, 5);
+        }
+
+        else if (selected_menu_idx == 4)
+        {
+            iFilledCircle(300, mainmenu_spacing*3, 5);
+        }
+
+        else if (selected_menu_idx == 5)
+        {
+            iFilledCircle(300, mainmenu_spacing*2, 5);
+        }
+
+        else if (selected_menu_idx == 6)
+        {
+            iFilledCircle(300, mainmenu_spacing, 5);
         }
 
         else if (selected_menu_idx == 0)
@@ -85,7 +102,7 @@ void iDraw()
         }
     }
 
-    if (gameState == 110)
+    if (gameState == 101)
     {
         iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
@@ -143,7 +160,7 @@ void iDraw()
 
     else if (gameState == 3)
     {
-        controlsMenu();
+        helpMenu();
         iSetColor(255,255,255);
         if (selected_menu_idx == 1){
             iFilledCircle(300,350,5);
@@ -187,7 +204,7 @@ void iMouseMove(int mx, int my)
 
     if (gameState == 3)
     {
-        controlsMenu();
+        helpMenu();
         iSetColor(255, 255, 255);
         if (selected_menu_idx == 1)
         {
@@ -220,7 +237,7 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
-    if (gameState == 110)
+    if (gameState == 101)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
@@ -245,7 +262,7 @@ void iMouse(int button, int state, int mx, int my)
             }
             else if (gomcheck == 1)
             {
-                gameState = 110;
+                gameState = 101;
                 isGameOver = false;
                 iStopAllSounds();
                 resetGame();
@@ -282,37 +299,58 @@ void iKeyboard(unsigned char key)
         {
 
         case 'w':
+        case 'W':
             if (selected_menu_idx > 1)
             {
-
                 selected_menu_idx--;
+            }
+            else if (selected_menu_idx == 1)
+            {
+                selected_menu_idx = 6;
             }
 
             break;
 
         case 's':
-            if (selected_menu_idx < 3)
+        case 'S':
+            if (selected_menu_idx < 6)
             {
 
                 selected_menu_idx++;
             }
-
+            else if (selected_menu_idx == 6)
+            {
+                selected_menu_idx = 1;
+            }
             break;
 
         case ' ':
+        case '\r':
             if (selected_menu_idx == 1)
-
-                gameState = 110;
+                gameState = 101;
 
             else if (selected_menu_idx == 2)
-
             {
 
-                gameState = 3; // Controls menu
             }
 
             else if (selected_menu_idx == 3)
+            {
+                gameState = 4;
+            }
 
+            else if (selected_menu_idx == 4)
+            {
+
+            }
+            
+            else if (selected_menu_idx == 5)
+            {
+
+                gameState = 3; // Help menu
+            }
+
+            else if (selected_menu_idx == 6)
                 exit(0);
             selected_menu_idx = 0;
             break;
@@ -321,7 +359,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    if (gameState == 110)
+    if (gameState == 101)
     {
         switch (key)
         {
@@ -379,7 +417,8 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
             case ' ':
-                gameState = 110;
+            case '\r':
+                gameState = 101;
                 iResumeTimer(0);
                 iResumeSound(0);
                 break;
@@ -417,7 +456,7 @@ void iKeyboard(unsigned char key)
             }
             else if (gomcheck == 1)
             {
-                gameState = 110;
+                gameState = 101;
                 isGameOver = false;
                 iStopAllSounds();
                 resetGame();
@@ -433,31 +472,43 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    if (gameState == 3) // controls menu
+    if (gameState == 3) // help menu
     {
         switch (key)
         {
         case 'w':
+        case 'W':
             if (selected_menu_idx > 1)
             {
                 selected_menu_idx--;
             }
+            else if (selected_menu_idx == 1)
+            {
+                selected_menu_idx = 2;
+            }
             break;
 
         case 's':
+        case 'S':
             if (selected_menu_idx < 2)
             {
                 selected_menu_idx++;
             }
+            else if (selected_menu_idx == 2)
+            {
+                selected_menu_idx = 1;
+            }
             break;
 
         case ' ':
+        case '\r':
             if (selected_menu_idx == 1)
+            {
                 gameState = 0;
-            if (selected_menu_idx == 2)
+                selected_menu_idx = 5;
+            }
+                if (selected_menu_idx == 2)
                 exit(0);
-
-            selected_menu_idx = 0;
             break;
 
         default:
@@ -533,7 +584,7 @@ void resetGame(void)
     ball_y = paddle_height + paddle_y + ball_radius;
     lives = 1;
     score = 0;
-    gameState = 110;
+    gameState = 101;
     iPlaySound("assets/sounds/gamebg1.wav", true, 40);
 }
 int main(int argc, char *argv[])
@@ -549,16 +600,18 @@ int main(int argc, char *argv[])
 
 void mainMenu(void)
 {
-
     // iShowImage(0, 0, "assets/images/mainmenu.png");
     iSetColor(255, 255, 255);
     iText(350, 700, "Do you like BALLS?", GLUT_BITMAP_HELVETICA_18);
-    iText(350, 500, "PLAY GAME");
-    iText(350, 450, "CONTROLS");
-    iText(350, 400, "QUIT");
+    iText(350, mainmenu_spacing*6, "PLAY GAME");
+    iText(350, mainmenu_spacing*5, "LOAD GAME");
+    iText(350, mainmenu_spacing*4, "OPTIONS");
+    iText(350, mainmenu_spacing*3, "HIGH SCORE");
+    iText(350, mainmenu_spacing*2, "HELP");
+    iText(350, mainmenu_spacing, "EXIT");
 }
 
-void controlsMenu(void)
+void helpMenu(void)
 {
     iSetColor(255, 255, 255);
     iText(350, 450, "You don't know how to play DXBALL?", GLUT_BITMAP_HELVETICA_18);
@@ -573,5 +626,11 @@ void pauseMenu(void)
     iSetColor(255,255,255);
     iText(350, 700, "Game Paused", GLUT_BITMAP_HELVETICA_18);
     iText(360, 300, "Press Space to continue");
+}
+
+void loadGameMenu(void)
+{
+    iSetColor(255,255,255);
+    iText(350, 700, "Loaded games here", GLUT_BITMAP_HELVETICA_18);
 }
 
