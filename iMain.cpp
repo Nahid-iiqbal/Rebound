@@ -464,13 +464,14 @@ void iKeyboard(unsigned char key)
             }
             if (selected_menu_idx == 1)
             {
-                gameState = 4;
+                //gameState = 4;
             }
             if (selected_menu_idx == 2)
             {
                 resetGame();
                 gameState = 0;
                 iStopSound(1);
+                mbgchk = 1;
             }
             if (selected_menu_idx == 3)
             {
