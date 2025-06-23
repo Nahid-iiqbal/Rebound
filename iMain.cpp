@@ -56,6 +56,7 @@ void iDraw()
 {
     iClear();
 
+    // main menu
     if (gameState == 0)
     {
 
@@ -104,6 +105,7 @@ void iDraw()
         }
     }
 
+    // main game (level 1)
     if (gameState == 101)
     {
         iShowImage(0, 0, "assets/images/1.png");
@@ -130,6 +132,7 @@ void iDraw()
         }
     }
 
+    // pause menu
     else if (gameState == 100)
     {
         pauseMenu();
@@ -152,6 +155,7 @@ void iDraw()
         }
     }
 
+    // game over
     else if (gameState == 2)
     {
         iStopSound(0);
@@ -175,6 +179,7 @@ void iDraw()
         iTextAdvanced(550, 167, scoreText, 0.3, 4);
     }
 
+    // controls menu
     else if (gameState == 3)
     {
         controlsMenu();
@@ -351,7 +356,8 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    if (gameState == 0) // main menu
+    // main menu
+    if (gameState == 0)
     {
 
         switch (key)
@@ -427,6 +433,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
+    // pause menu
     if (gameState == 100)
     {
         switch (key)
@@ -472,6 +479,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
+    // main game
     if (gameState == 101)
     {
         switch (key)
@@ -526,6 +534,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
+    // game over
     if (gameState == 2)
     {
         switch (key)
@@ -552,6 +561,7 @@ void iKeyboard(unsigned char key)
             {
                 gameState = 0;
                 iStopAllSounds();
+                mbgchk = 1;
             }
             else if (gomcheck == 1)
             {
