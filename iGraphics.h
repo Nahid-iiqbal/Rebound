@@ -1,6 +1,6 @@
 //
 //  Original Author: S. M. Shahriar Nirjon
-//  last modified: May 16, 2025 (Mahir Labib Dihan)
+//  last modified: Jun 24, 2025 (Mahir Labib Dihan)
 //
 //  Version: 2.0.2012.2015.2024.2025
 //
@@ -35,6 +35,7 @@ typedef struct
 {
     unsigned char *data;
     int width, height, channels;
+    GLuint textureId; // OpenGL texture ID
 } Image;
 
 typedef struct
@@ -44,7 +45,7 @@ typedef struct
     int currentFrame;
     int totalFrames;
     unsigned char *collisionMask;
-    int ignoreColor;
+    // int ignoreColor;
 
     // Tracking transformation
     float scale;
@@ -53,8 +54,10 @@ typedef struct
 
 enum MirrorState
 {
+    NO_MIRROR,
     HORIZONTAL,
-    VERTICAL
+    VERTICAL,
+    MIRROR_BOTH
 };
 
 int iScreenHeight, iScreenWidth;
@@ -78,6 +81,16 @@ void iMouseMove(int, int); // New function
 void iMouse(int button, int state, int x, int y);
 void iMouseWheel(int dir, int x, int y);
 // void iResize(int width, int height);
+
+#define max(a, b) ((a) > (b) ? (a) : (b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define swap(a, b)            \
+    do                        \
+    {                         \
+        typeof(a) temp = (a); \
+        (a) = (b);            \
+        (b) = temp;           \
+    } while (0)
 
 #ifdef WIN32
 
@@ -135,9 +148,80 @@ void iResumeTimer(int index)
     }
 }
 
-// Additional functions for displaying images
+void iUpdateTexture(Image *img, bool resized = false)
+{
+    if (!img->textureId)
+    {
+        return; // No texture to update
+    }
+    glBindTexture(GL_TEXTURE_2D, img->textureId);
+    GLenum format = (img->channels == 4) ? GL_RGBA : GL_RGB;
 
-bool iLoadImage(Image *img, const char filename[])
+    if (resized)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
+                     img->width, img->height, 0,
+                     format, GL_UNSIGNED_BYTE, img->data);
+    }
+    else
+    {
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0,
+                        img->width, img->height,
+                        format, GL_UNSIGNED_BYTE, img->data);
+    }
+}
+
+void iIgnorePixels(Image *img, int ignoreColor = -1)
+{
+    if (ignoreColor == -1 || img->data == nullptr)
+        return;
+
+    unsigned char ignoreR = (ignoreColor >> 16) & 0xFF;
+    unsigned char ignoreG = (ignoreColor >> 8) & 0xFF;
+    unsigned char ignoreB = ignoreColor & 0xFF;
+
+    for (int i = 0; i < img->width * img->height * img->channels; i += img->channels)
+    {
+        if (img->data[i] == ignoreR && img->data[i + 1] == ignoreG && img->data[i + 2] == ignoreB)
+        {
+            if (img->channels == 4)
+            {
+                img->data[i + 3] = 0; // Set alpha to 0 for transparency
+            }
+            else
+            {
+                img->data[i] = img->data[i + 1] = img->data[i + 2] = 0; // Set RGB to black
+            }
+        }
+    }
+
+    iUpdateTexture(img); // Update the OpenGL texture after modifying pixel data
+}
+
+bool iLoadTexture(Image *img)
+{
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+
+    // Set texture parameters ONCE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    // Determine format
+    GLenum format = (img->channels == 4) ? GL_RGBA : GL_RGB;
+
+    // Upload texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, format, img->width, img->height,
+                 0, format, GL_UNSIGNED_BYTE, img->data);
+
+    img->textureId = texId;
+    return true;
+}
+
+// Additional functions for displaying images
+bool iLoadImage(Image *img, const char filename[], int ignoreColor = -1)
 {
     stbi_set_flip_vertically_on_load(true);
     img->data = stbi_load(filename, &img->width, &img->height, &img->channels, 0);
@@ -146,15 +230,84 @@ bool iLoadImage(Image *img, const char filename[])
         printf("Failed to load image: %s\n", stbi_failure_reason());
         return false;
     }
+
+    // Ignore the pixels with the specified ignore color
+    iIgnorePixels(img, ignoreColor);
+    img->textureId = 0; // Initialize texture ID to 0
     return true;
+}
+
+void iFreeTexture(Image *img)
+{
+    if (!img || img->textureId == 0)
+        return;
+    glDeleteTextures(1, &img->textureId);
+    img->textureId = 0; // Reset texture ID after deletion
 }
 
 void iFreeImage(Image *img)
 {
+    iFreeTexture(img);
     stbi_image_free(img->data);
 }
 
-void iShowImage2(int x, int y, Image *img, int ignoreColor)
+void iShowTexture2(int x, int y, Image *img, int width = -1, int height = -1, MirrorState mirror = NO_MIRROR)
+{
+    int imgWidth = width == -1 ? img->width : width;
+    int imgHeight = height == -1 ? img->height : height;
+
+    if (x + imgWidth <= 0 || y + imgHeight <= 0 || x >= iScreenWidth || y >= iScreenHeight)
+        return;
+
+    if (img->textureId == 0)
+    {
+        if (!iLoadTexture(img))
+        {
+            printf("Failed to load texture for image at (%d, %d)\n", x, y);
+            return;
+        }
+    }
+
+    glBindTexture(GL_TEXTURE_2D, img->textureId);
+
+    glEnable(GL_TEXTURE_2D);
+    glBegin(GL_QUADS);
+
+    float tx1 = 0.0f, ty1 = 0.0f;
+    float tx2 = 1.0f, ty2 = 1.0f;
+
+    // Handle mirror states
+    if (mirror == HORIZONTAL || mirror == MIRROR_BOTH)
+        swap(tx1, tx2);
+    if (mirror == VERTICAL || mirror == MIRROR_BOTH)
+        swap(ty1, ty2);
+
+    glTexCoord2f(tx1, ty1);
+    glVertex2i(x, y);
+    glTexCoord2f(tx2, ty1);
+    glVertex2i(x + imgWidth, y);
+    glTexCoord2f(tx2, ty2);
+    glVertex2i(x + imgWidth, y + imgHeight);
+    glTexCoord2f(tx1, ty2);
+    glVertex2i(x, y + imgHeight);
+
+    glEnd();
+    glDisable(GL_TEXTURE_2D);
+}
+
+void iShowTexture(int x, int y, const char *filename, int width = -1, int height = -1, MirrorState mirror = NO_MIRROR, int ignoreColor = -1)
+{
+    Image img;
+    if (!iLoadImage(&img, filename, ignoreColor))
+    {
+        return;
+    }
+
+    iShowTexture2(x, y, &img, width, height, mirror);
+    iFreeImage(&img);
+}
+
+void iShowImage2(int x, int y, Image *img)
 {
     int imgWidth = img->width;
     int imgHeight = img->height;
@@ -167,39 +320,24 @@ void iShowImage2(int x, int y, Image *img, int ignoreColor)
     int screenWidth = viewport[2];
     int screenHeight = viewport[3];
 
-    // Determine visible region
-    int startX = 0, startY = 0;
-    int drawX = x, drawY = y;
-    int drawWidth = imgWidth;
-    int drawHeight = imgHeight;
-
-    // Clip left
-    if (x < 0)
+    // Fast path: no clipping needed
+    if (x >= 0 && y >= 0)
     {
-        startX = -x;
-        drawX = 0;
-        drawWidth -= startX;
+        glRasterPos2i(x, y);
+        glDrawPixels(imgWidth, imgHeight,
+                     (channels == 4) ? GL_RGBA : GL_RGB,
+                     GL_UNSIGNED_BYTE, data);
+        return;
     }
 
-    // Clip bottom
-    if (y < 0)
-    {
-        startY = -y;
-        drawY = 0;
-        drawHeight -= startY;
-    }
+    // Improved visible region calculation with clamping
+    int startX = max(0, -x);
+    int startY = max(0, -y);
+    int drawX = max(0, x);
+    int drawY = max(0, y);
 
-    // Clip right
-    if (drawX + drawWidth > screenWidth)
-    {
-        drawWidth = screenWidth - drawX;
-    }
-
-    // Clip top
-    if (drawY + drawHeight > screenHeight)
-    {
-        drawHeight = screenHeight - drawY;
-    }
+    int drawWidth = min(imgWidth - startX, screenWidth - drawX);
+    int drawHeight = min(imgHeight - startY, screenHeight - drawY);
 
     // Don't draw if completely out of bounds
     if (drawWidth <= 0 || drawHeight <= 0)
@@ -207,94 +345,79 @@ void iShowImage2(int x, int y, Image *img, int ignoreColor)
 
     // Create a buffer for the clipped image
     unsigned char *clippedData = new unsigned char[drawWidth * drawHeight * channels];
+    int srcStride = imgWidth * channels;
+    int dstStride = drawWidth * channels;
 
-    for (int y = 0; y < drawHeight; y++)
+    unsigned char *dstPtr = clippedData;
+    unsigned char *srcPtr = data + startY * srcStride + startX * channels;
+
+    for (int dy = 0; dy < drawHeight; dy++)
     {
-        for (int x = 0; x < drawWidth; x++)
-        {
-            int srcX = startX + x;
-            int srcY = startY + y;
-            int srcIndex = (srcY * imgWidth + srcX) * channels;
-            int dstIndex = (y * drawWidth + x) * channels;
-
-            // Copy and optionally ignore color
-            unsigned char r = data[srcIndex];
-            unsigned char g = data[srcIndex + 1];
-            unsigned char b = data[srcIndex + 2];
-            bool ignore = (ignoreColor != -1 &&
-                           r == (ignoreColor >> 16 & 0xFF) &&
-                           g == ((ignoreColor >> 8) & 0xFF) &&
-                           b == ((ignoreColor) & 0xFF));
-
-            if (ignore)
-            {
-                clippedData[dstIndex + 0] = 0;
-                clippedData[dstIndex + 1] = 0;
-                clippedData[dstIndex + 2] = 0;
-                if (channels == 4)
-                    clippedData[dstIndex + 3] = 0;
-            }
-            else
-            {
-                for (int c = 0; c < channels; c++)
-                {
-                    clippedData[dstIndex + c] = data[srcIndex + c];
-                }
-            }
-        }
+        memcpy(dstPtr, srcPtr, dstStride);
+        dstPtr += dstStride;
+        srcPtr += srcStride;
     }
 
     glRasterPos2i(drawX, drawY);
     glDrawPixels(drawWidth, drawHeight, (channels == 4) ? GL_RGBA : GL_RGB, GL_UNSIGNED_BYTE, clippedData);
-
     delete[] clippedData;
 }
 
-void iShowLoadedImage(int x, int y, Image *img)
+void iShowLoadedTexture(int x, int y, Image *img, int width = -1, int height = -1, MirrorState mirror = NO_MIRROR)
 {
-    iShowImage2(x, y, img, -1 /* ignoreColor */);
+    iShowTexture2(x, y, img, width, height, mirror);
 }
 
-void iShowImage(int x, int y, const char *filename)
+void iShowLoadedImage(int x, int y, Image *img, int width = -1, int height = -1, MirrorState mirror = NO_MIRROR)
+{
+    iShowTexture2(x, y, img, width, height, mirror);
+}
+
+void iShowImage(int x, int y, const char *filename, int width = -1, int height = -1, MirrorState mirror = NO_MIRROR, int ignoreColor = -1)
 {
     Image img;
-    if (!iLoadImage(&img, filename))
+    if (!iLoadImage(&img, filename, ignoreColor))
     {
         printf("Failed to load image: %s\n", filename);
         return;
     }
-    iShowImage2(x, y, &img, -1 /* ignoreColor */);
+    iShowTexture2(x, y, &img, width, height, mirror);
     iFreeImage(&img);
 }
 
-void iWrapImage(Image *img, int dx)
+void iWrapImage(Image *img, int dx = 0, int dy = 0)
 {
-    // Circular shift the image horizontally by dx pixels (positive = right, negative = left)
+    // Circular shift the image horizontally by dx and vertically by dy pixels
     int width = img->width;
     int height = img->height;
     int channels = img->channels;
     unsigned char *data = img->data;
     unsigned char *wrappedData = new unsigned char[width * height * channels];
 
-    // Normalize dx to be within [0, width)
+    // Normalize dx to [0, width), dy to [0, height)
     dx = ((dx % width) + width) % width;
+    dy = ((dy % height) + height) % height;
 
     for (int y = 0; y < height; y++)
     {
         for (int x = 0; x < width; x++)
         {
-            int index = (y * width + x) * channels;
+            int srcIndex = (y * width + x) * channels;
             int wrappedX = (x + dx) % width;
-            int wrappedIndex = (y * width + wrappedX) * channels;
+            int wrappedY = (y + dy) % height;
+            int dstIndex = (wrappedY * width + wrappedX) * channels;
+
             for (int c = 0; c < channels; c++)
             {
-                wrappedData[wrappedIndex + c] = data[index + c];
+                wrappedData[dstIndex + c] = data[srcIndex + c];
             }
         }
     }
 
     stbi_image_free(data);
     img->data = wrappedData;
+
+    iUpdateTexture(img);
 }
 
 void iResizeImage(Image *img, int width, int height)
@@ -309,6 +432,8 @@ void iResizeImage(Image *img, int width, int height)
     img->data = resizedData;
     img->width = width;
     img->height = height;
+
+    iUpdateTexture(img, true); // Update OpenGL texture after resizing
 }
 
 void iScaleImage(Image *img, double scale)
@@ -332,6 +457,8 @@ void iScaleImage(Image *img, double scale)
     img->data = resizedData;
     img->width = newWidth;
     img->height = newHeight;
+
+    iUpdateTexture(img, true); // Update OpenGL texture after scaling
 }
 
 void iMirrorImage(Image *img, MirrorState state)
@@ -374,6 +501,8 @@ void iMirrorImage(Image *img, MirrorState state)
     }
     stbi_image_free(data);
     img->data = mirroredData;
+
+    iUpdateTexture(img); // Update OpenGL texture after mirroring
 }
 
 // ignorecolor = hex color code 0xRRGGBB
@@ -383,7 +512,7 @@ void iUpdateCollisionMask(Sprite *s)
     {
         return;
     }
-    int ignorecolor = s->ignoreColor;
+    // int ignorecolor = s->ignoreColor;
     // if (ignorecolor == -1)
     // {
     //     s->collisionMask = nullptr;
@@ -409,16 +538,16 @@ void iUpdateCollisionMask(Sprite *s)
         {
             int index = (y * width + x) * channels;
 
-            unsigned char r = data[index];
-            unsigned char g = (channels > 1) ? data[index + 1] : 0;
-            unsigned char b = (channels > 2) ? data[index + 2] : 0;
+            // unsigned char r = data[index];
+            // unsigned char g = (channels > 1) ? data[index + 1] : 0;
+            // unsigned char b = (channels > 2) ? data[index + 2] : 0;
             unsigned char a = (channels == 4) ? data[index + 3] : 255;
 
             bool isTransparent = (channels == 4 && a == 0);
 
-            bool isIgnoredColor = (ignorecolor == -1 ? false : ((r == (ignorecolor >> 16 & 0xFF)) && (g == ((ignorecolor >> 8) & 0xFF)) && (b == ((ignorecolor) & 0xFF))));
+            // bool isIgnoredColor = (ignorecolor == -1 ? false : ((r == (ignorecolor >> 16 & 0xFF)) && (g == ((ignorecolor >> 8) & 0xFF)) && (b == ((ignorecolor) & 0xFF))));
 
-            collisionMask[y * width + x] = (isTransparent || isIgnoredColor) ? 0 : 1;
+            collisionMask[y * width + x] = (isTransparent) ? 0 : 1;
         }
     }
     s->collisionMask = collisionMask;
@@ -502,12 +631,28 @@ int compareFilenames(const void *a, const void *b)
     const char *strB = *(const char **)b;
     return strcmp(strA, strB);
 }
+void iAllocateTexture(Image *img)
+{
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    // Set texture parameters ONCE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+    // Determine format
+    GLenum format = (img->channels == 4) ? GL_RGBA : GL_RGB;
+    // Upload texture data
+    glTexImage2D(GL_TEXTURE_2D, 0, format, img->width, img->height,
+                 0, format, GL_UNSIGNED_BYTE, img->data);
+    img->textureId = texId;
+}
 
-void iLoadFramesFromSheet(Image *frames, const char *filename, int rows, int cols)
+void iLoadFramesFromSheet(Image *frames, const char *filename, int rows, int cols, int ignoreColor = -1)
 {
     // Load the sprite sheet image
     Image tmp;
-    iLoadImage(&tmp, filename);
+    iLoadImage(&tmp, filename, ignoreColor);
 
     int frameWidth = tmp.width / cols;
     int frameHeight = tmp.height / rows;
@@ -544,6 +689,8 @@ void iLoadFramesFromSheet(Image *frames, const char *filename, int rows, int col
                 }
             }
         }
+
+        // iAllocateTexture(frame); // Set the texture ID for the frame
     }
 
     delete[] tmp.data;
@@ -552,7 +699,7 @@ void iLoadFramesFromSheet(Image *frames, const char *filename, int rows, int col
 #define MAX_FILES 1024
 #define MAX_FILENAME_LEN 512
 
-void iLoadFramesFromFolder(Image *frames, const char *folderPath)
+void iLoadFramesFromFolder(Image *frames, const char *folderPath, int ignoreColor = -1)
 {
     DIR *dir = opendir(folderPath);
     if (dir == nullptr)
@@ -595,18 +742,18 @@ void iLoadFramesFromFolder(Image *frames, const char *folderPath)
     {
         char fullPath[MAX_FILENAME_LEN];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", folderPath, filenames[i]);
-        iLoadImage(&frames[i], fullPath);
+        iLoadImage(&frames[i], fullPath, ignoreColor);
         free(filenames[i]); // free allocated memory
     }
 }
 
-void iInitSprite(Sprite *s, int ignoreColor = -1)
+void iInitSprite(Sprite *s)
 {
     s->x = 0;
     s->y = 0;
 
     s->collisionMask = nullptr;
-    s->ignoreColor = ignoreColor;
+    // s->ignoreColor = ignoreColor;
 
     // Assign the pre-loaded frames to the sprite
     s->currentFrame = -1;
@@ -623,6 +770,7 @@ void deepCopyImage(Image src, Image *dst)
     dst->width = src.width;
     dst->height = src.height;
     dst->channels = src.channels;
+    dst->textureId = 0; // Copy texture ID
 
     // Allocate memory for the image data in the destination
     dst->data = (unsigned char *)malloc(src.width * src.height * src.channels);
@@ -635,6 +783,7 @@ void deepCopyImage(Image src, Image *dst)
 
     // Copy the image data byte-by-byte
     memcpy(dst->data, src.data, src.width * src.height * src.channels);
+    // iAllocateTexture(dst); // Set the texture ID for the destination image
 }
 
 void iScaleSprite(Sprite *s, double scale)
@@ -685,7 +834,6 @@ void iChangeSpriteFrames(Sprite *s, const Image *frames, int totalFrames)
         if (s->flipVertical)
             iMirrorImage(frame, VERTICAL);
     }
-
     iUpdateCollisionMask(s);
 }
 
@@ -699,8 +847,7 @@ void iShowSprite(const Sprite *s)
 {
     if (!s || !s->frames)
         return;
-
-    iShowImage2(s->x, s->y, &s->frames[s->currentFrame], s->ignoreColor);
+    iShowTexture2(s->x, s->y, &s->frames[s->currentFrame]);
 }
 
 void iResizeSprite(Sprite *s, int width, int height)
@@ -832,6 +979,27 @@ void iTextAdvanced(double x, double y, const char *str, float scale = 0.3, float
     }
     glLineWidth(width); // Reset line width to default
     glPopMatrix();      // Restore transformation matrix
+}
+
+int frameCount = 0;
+int previousTime = 0;
+int fps = 0;
+
+void iShowSpeed(double x, double y)
+{
+    frameCount++;
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);
+    int timeInterval = currentTime - previousTime;
+    if (timeInterval > 1000)
+    {
+        fps = (frameCount * 1000.0) / timeInterval;
+        previousTime = currentTime;
+        frameCount = 0;
+    }
+
+    char fpsText[20];
+    sprintf(fpsText, "FPS: %d", fps);
+    iText(x, y, fpsText);
 }
 
 void iPoint(double x, double y, int size = 0)
@@ -1241,6 +1409,6 @@ void iInitialize(int width = 500, int height = 500, const char *title = "iGraphi
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
-
+    // glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
     glutMainLoop();
 }

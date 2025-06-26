@@ -62,7 +62,7 @@ void iDraw()
         mainMenu();
         if (mbgchk)
         {
-            iPlaySound("assets/sounds/mus_menu6.wav", true);
+            iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
             mbgchk = 0;
         }
         iSetColor(255, 255, 255);
@@ -380,11 +380,12 @@ void iKeyboard(unsigned char key)
             break;
 
         case '\r':
+        case ' ':
             if (selected_menu_idx == 1)
 
             {
-                gameState = 101;
                 iStopSound(0);
+                gameState = 101;
             }
 
             else if (selected_menu_idx == 2)
@@ -395,9 +396,7 @@ void iKeyboard(unsigned char key)
             }
 
             else if (selected_menu_idx == 3)
-
                 exit(0);
-            selected_menu_idx = 0;
             break;
         default:
             break;
@@ -679,11 +678,12 @@ void pauseMenu(void)
 
 void mainMenu(void)
 {
-    iShowImage(0, 0, "assets/images/mainmenubg.png");
-    iText(350, mainmenu_spacing * 6, "PLAY GAME");
-    iText(350, mainmenu_spacing * 5, "LOAD GAME");
-    iText(350, mainmenu_spacing * 4, "OPTIONS");
-    iText(350, mainmenu_spacing * 3, "HIGH SCORE");
-    iText(350, mainmenu_spacing * 2, "HELP");
-    iText(350, mainmenu_spacing, "EXIT");
+    iShowImage(0, 0, "assets/images/mainmenubg2.png");
+    iShowImage(350, 500, "assets/images/NEW GAME (1).png");
+    // iText(350, mainmenu_spacing * 6, "PLAY GAME");
+    // iText(350, mainmenu_spacing * 5, "LOAD GAME");
+    // iText(350, mainmenu_spacing * 4, "OPTIONS");
+    // iText(350, mainmenu_spacing * 3, "HIGH SCORE");
+    // iText(350, mainmenu_spacing * 2, "HELP");
+    // iText(350, mainmenu_spacing, "EXIT");
 }
