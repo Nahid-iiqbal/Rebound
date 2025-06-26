@@ -420,13 +420,16 @@ void iKeyboard(unsigned char key)
 
         case 'w':
         case 'W':
-            selected_menu_idx = (selected_menu_idx + 5) % 7;
-
+            selected_menu_idx = (selected_menu_idx + 6) % 7;
+            if(selected_menu_idx == 0)
+                selected_menu_idx = 1; // wrap around to the last option
             break;
 
         case 's':
         case 'S':
             selected_menu_idx = (selected_menu_idx + 1) % 7;
+            if(selected_menu_idx == 0)
+                selected_menu_idx = 6;
             break;
 
         case ' ':
