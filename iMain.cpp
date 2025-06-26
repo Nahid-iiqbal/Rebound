@@ -397,6 +397,9 @@ void iKeyboard(unsigned char key)
             {
                 //main game
                 gameState = 101;
+                iResumeTimer(0);
+                iStopAllSounds();
+                resetGame();
             }
 
             else if (selected_menu_idx == 2)
@@ -468,7 +471,7 @@ void iKeyboard(unsigned char key)
             {
                 resetGame();
                 gameState = 0;
-                iStopSound(1);
+                iStopAllSounds();
                 mbgchk = 1;
             }
             if (selected_menu_idx == 3)
@@ -724,10 +727,10 @@ void mainMenu(void)
 {
     iShowImage(0, 0, "assets/images/mainmenubg2.png");
     iShowImage(350, 500, "assets/images/NEW GAME (1).png");
-    // iText(350, mainmenu_spacing * 6, "PLAY GAME");
-    // iText(350, mainmenu_spacing * 5, "LOAD GAME");
-    // iText(350, mainmenu_spacing * 4, "OPTIONS");
-    // iText(350, mainmenu_spacing * 3, "HIGH SCORE");
-    // iText(350, mainmenu_spacing * 2, "HELP");
-    // iText(350, mainmenu_spacing, "EXIT");
+    iText(350, mainmenu_spacing * 6, "PLAY GAME");
+    iText(350, mainmenu_spacing * 5, "LOAD GAME");
+    iText(350, mainmenu_spacing * 4, "OPTIONS");
+    iText(350, mainmenu_spacing * 3, "HIGH SCORE");
+    iText(350, mainmenu_spacing * 2, "HELP");
+    iText(350, mainmenu_spacing, "EXIT");
 }
