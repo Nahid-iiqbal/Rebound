@@ -56,6 +56,7 @@ void iDraw()
 {
     iClear();
 
+    // main menu
     if (gameState == 0)
     {
 
@@ -99,11 +100,12 @@ void iDraw()
 
         else if (selected_menu_idx == 0)
         {
-            iFilledCircle(300, 500, 5);
+            iFilledCircle(300, mainmenu_spacing * 6, 5);
             selected_menu_idx = 1;
         }
     }
 
+    // main game (level 1)
     if (gameState == 101)
     {
         iShowImage(0, 0, "assets/images/1.png");
@@ -130,6 +132,7 @@ void iDraw()
         }
     }
 
+    // pause menu
     else if (gameState == 100)
     {
         pauseMenu();
@@ -138,20 +141,21 @@ void iDraw()
         {
             iShowImage(50, 435, "assets/images/rsmyl.png");
         }
-        if (selected_menu_idx == 1)
+        else if (selected_menu_idx == 1)
         {
             iShowImage(50, 375, "assets/images/opnyl.png");
         }
-        if (selected_menu_idx == 2)
+        else if (selected_menu_idx == 2)
         {
             iShowImage(50, 315, "assets/images/exitmmyl.png");
         }
-        if (selected_menu_idx == 3)
+        else if (selected_menu_idx == 3)
         {
             iShowImage(50, 255, "assets/images/exitdskyl.png");
         }
     }
 
+    // game over
     else if (gameState == 2)
     {
         iStopSound(0);
@@ -175,6 +179,7 @@ void iDraw()
         iTextAdvanced(550, 167, scoreText, 0.3, 4);
     }
 
+    // controls menu
     else if (gameState == 3)
     {
         controlsMenu();
@@ -183,7 +188,7 @@ void iDraw()
         {
             iFilledCircle(300, 350, 5);
         }
-        if (selected_menu_idx == 2)
+        else if (selected_menu_idx == 2)
         {
             iFilledCircle(300, 300, 5);
         }
@@ -351,8 +356,8 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    if (gameState == 0) // main menu
-
+    // main menu
+    if (gameState == 0)
     {
 
         switch (key)
@@ -363,46 +368,70 @@ void iKeyboard(unsigned char key)
         case 'W':
             if (selected_menu_idx > 1)
             {
-
                 selected_menu_idx--;
             }
+            
+            else if (selected_menu_idx == 1)
+            {
+                selected_menu_idx = 6;
+            }
+            
 
             break;
 
         case 's':
         case 'S':
-            if (selected_menu_idx < 3)
+            if (selected_menu_idx < 6)
             {
-
                 selected_menu_idx++;
             }
-
-            break;
-
-        case '\r':
-        case ' ':
-            if (selected_menu_idx == 1)
-
+            else if (selected_menu_idx == 6) 
             {
-                iStopSound(0);
+                selected_menu_idx = 1;
+            }
+            break;
+        
+        case ' ':
+        case '\r':
+            if (selected_menu_idx == 1)
+            {
+                //main game
                 gameState = 101;
             }
 
             else if (selected_menu_idx == 2)
-
             {
-
-                gameState = 3; // Controls menu
+                
             }
 
             else if (selected_menu_idx == 3)
+            {
+                // options
+                //gameState = 4;
+            }
+            
+            else if (selected_menu_idx == 4)
+            {
+                //high score
+            }
+            else if (selected_menu_idx == 5)
+            {
+                // help menu
+                gameState = 3;  
+            }
+            else if (selected_menu_idx == 6)
+            {   
+                // exit 
                 exit(0);
+            }
+            selected_menu_idx = 0;
             break;
         default:
             break;
         }
     }
 
+    // pause menu
     if (gameState == 100)
     {
         switch (key)
@@ -422,6 +451,7 @@ void iKeyboard(unsigned char key)
 
         switch (key)
         {
+        case ' ':
         case '\r':
 
             if (selected_menu_idx == 0)
@@ -432,13 +462,14 @@ void iKeyboard(unsigned char key)
             }
             if (selected_menu_idx == 1)
             {
-                gameState = 4;
+                //gameState = 4;
             }
             if (selected_menu_idx == 2)
             {
                 resetGame();
                 gameState = 0;
                 iStopSound(1);
+                mbgchk = 1;
             }
             if (selected_menu_idx == 3)
             {
@@ -447,6 +478,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
+    // main game
     if (gameState == 101)
     {
         switch (key)
@@ -501,6 +533,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
+    // game over
     if (gameState == 2)
     {
         switch (key)
@@ -520,12 +553,14 @@ void iKeyboard(unsigned char key)
 
         switch (key)
         {
+        case ' ':
         case '\r':
 
             if (gomcheck == 0)
             {
                 gameState = 0;
                 iStopAllSounds();
+                mbgchk = 1;
             }
             else if (gomcheck == 1)
             {
@@ -554,6 +589,10 @@ void iKeyboard(unsigned char key)
             {
                 selected_menu_idx--;
             }
+            else if (selected_menu_idx == 1)
+            {
+                selected_menu_idx = 2;
+            }
             break;
 
         case 's':
@@ -561,8 +600,13 @@ void iKeyboard(unsigned char key)
             {
                 selected_menu_idx++;
             }
+            else if (selected_menu_idx == 2)
+            {
+                selected_menu_idx = 1;
+            }
             break;
 
+        case ' ':
         case '\r':
             if (selected_menu_idx == 1)
                 gameState = 0;
