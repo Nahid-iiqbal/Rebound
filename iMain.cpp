@@ -9,7 +9,7 @@ float pi = 3.14159;
 float dx;
 float dy;
 int bgchk = 1, mbgchk = 1;
-float ball_spd = 10;
+float ball_spd = 5.0;
 int screen_width = 1000;
 int screen_height = 750;
 int paddle_width = 100;
@@ -31,6 +31,41 @@ int max_menu_optn = 1;
 int selected_menu_idx = 1;
 int mainmenu_spacing = 50;
 bool isBallMoving = false;
+int block_width = 50;
+int block_height = 20;
+int block_padding = 2;
+char block_path[4][30] = {
+    "assets/images/blocks/1.png",
+    "assets/images/blocks/2.png",
+    "assets/images/blocks/3.png",
+    "assets/images/blocks/4.png"
+};
+
+int blockGrid[20][20] = {
+    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1},
+    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0},
+    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
+    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0},
+    {0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+    {1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
+    {0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1},
+    {1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0},
+    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
+    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
+    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0},
+    {0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+    {1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
+    {0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1},
+    {1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0},
+    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
+    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
+    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
+    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0}
+};
+
+
+// block1 col = 00ffb5, 004d37
 
 /*
 gamestate:
@@ -48,6 +83,7 @@ void resetGame(void);
 void mainMenu(void);
 void controlsMenu(void);
 void pauseMenu(void);
+void drawBlocks(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -107,6 +143,7 @@ void iDraw()
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
+        drawBlocks();
         iSetColor(255, 0, 0);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
@@ -714,6 +751,51 @@ void ballMotion()
         ball_x = paddle_x + dbx + paddle_width / 2;
         ball_y = paddle_height + paddle_y + ball_radius;
     }
+
+
+    // Collision
+    if (ball_y > 280)
+    {
+        for (int i = 0; i < 20; i++)
+        {
+            for (int j = 0; j < 20; j++)
+            {
+                if (blockGrid[i][j] > 0)
+                {
+                    int block_x = j * block_width;
+                    int block_y = screen_height - (i + 1) * block_height - 70;
+                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
+                    {
+                        if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
+                        {
+                            blockGrid[i][j] -= 1;
+                            score += 10;
+                            dy *= (-1);
+                            iPlaySound("assets/sounds/bounce.wav");
+                            continue;
+                        }
+                    }
+                    if ((ball_y > block_y) && (ball_y < block_y + block_height))
+                    {
+                        if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
+                        {
+                            blockGrid[i][j] -= 1;
+                            score += 10;
+                            dx *= (-1);
+                            iPlaySound("assets/sounds/bounce.wav");
+                        }
+                    }
+                    // else if (((ball_x + ball_radius/sqrt(2) == j*block_width) || (ball_x - ball_radius/sqrt(2) == (j+1)*block_width)) && (((ball_y + ball_radius/sqrt(2) == screen_height - (i+1)*block_height - 70 || (ball_y - ball_radius/sqrt(2) == screen_height - (i)*block_height - 70)))))
+                    // {
+                    //     blockGrid[i][j] -= 1;
+                    //     score += 10;
+                    //     dx *= (-1);
+                    //     dy *= (-1);
+                    //     iPlaySound("assets/sounds/bounce.wav");
+                }
+            }
+        }
+    }
 }
 /*
 function iSpecialKeyboard() is called whenver user hits special keys likefunction
@@ -789,3 +871,32 @@ void mainMenu(void)
     iShowImage(360, 300, "assets/images/mm_loadgame_white.png");
     iShowImage(360, 370, "assets/images/mm_newgame_white.png");
 }
+
+void drawBlocks(void)
+{
+    for (int i = 0; i < 20; i++)
+    {
+        for (int j = 0; j < 20; j++)
+        {
+            if (blockGrid[i][j] == 1)
+            {
+                //iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(0, 77, 55);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(0, 255, 181);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+
+            }
+
+            else if (blockGrid[i][j] == 2)
+            {
+                //iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(0, 77, 55);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(0, 255, 181);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+
+            }
+        }
+    }
+} 
