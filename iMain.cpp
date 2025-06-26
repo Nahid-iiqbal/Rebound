@@ -529,6 +529,7 @@ void iKeyboard(unsigned char key)
         case 27:
             gameState = 100;
             iPauseTimer(0);
+            iPauseSound(0);
             break;
 
         default:
@@ -693,7 +694,9 @@ void resetGame(void)
     lives = 1;
     score = 0;
     gameState = 101;
-    iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+    bgchk = 1;
+    isGameOver = false;
+    //iPlaySound("assets/sounds/gamebg1.wav", true, 40);
 }
 int main(int argc, char *argv[])
 {
