@@ -571,7 +571,6 @@ void iKeyboard(unsigned char key)
         case 27:
             gameState = 100;
             iPauseTimer(0);
-            iPauseSound(0);
             break;
 
         default:
