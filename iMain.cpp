@@ -400,13 +400,13 @@ void iMouse(int button, int state, int mx, int my)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
-            if (!isBallMoving)
-            {
+            // if (!isBallMoving)
+            // {
 
-                dx = ball_spd * cos(pi / 4);
-                dy = ball_spd * sin(pi / 4);
-                isBallMoving = true;
-            }
+            //     dx = ball_spd * cos(pi / 4);
+            //     dy = ball_spd * sin(pi / 4);
+            //     isBallMoving = true;
+            // }
         }
     }
     if (gameState == 2)
