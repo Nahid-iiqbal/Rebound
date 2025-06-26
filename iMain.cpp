@@ -28,8 +28,9 @@ char scoreText[10];
 char lifeText[10];
 int gomcheck = 0;
 int max_menu_optn = 1;
-int selected_menu_idx = 0;
+int selected_menu_idx = 1;
 int mainmenu_spacing = 50;
+bool isBallMoving = false;
 
 /*
 gamestate:
@@ -70,38 +71,32 @@ void iDraw()
 
         if (selected_menu_idx == 1)
         {
-            iFilledCircle(300, mainmenu_spacing * 6, 5);
+            iShowImage(360, 370, "assets/images/mm_newgame_red.png");
         }
 
         else if (selected_menu_idx == 2)
         {
-            iFilledCircle(300, mainmenu_spacing * 5, 5);
+            iShowImage(360, 300, "assets/images/mm_loadgame_red.png");
         }
 
         else if (selected_menu_idx == 3)
         {
-            iFilledCircle(300, mainmenu_spacing * 4, 5);
+            iShowImage(360, 230, "assets/images/mm_highscore_red.png");
         }
 
         else if (selected_menu_idx == 4)
         {
-            iFilledCircle(300, mainmenu_spacing * 3, 5);
+            iShowImage(360, 160, "assets/images/mm_options_red.png");
         }
 
         else if (selected_menu_idx == 5)
         {
-            iFilledCircle(300, mainmenu_spacing * 2, 5);
+            iShowImage(360, 90, "assets/images/mm_help_red.png");
         }
 
         else if (selected_menu_idx == 6)
         {
-            iFilledCircle(300, mainmenu_spacing, 5);
-        }
-
-        else if (selected_menu_idx == 0)
-        {
-            iFilledCircle(300, mainmenu_spacing * 6, 5);
-            selected_menu_idx = 1;
+            iShowImage(360, 20, "assets/images/mm_exit_red.png");
         }
     }
 
@@ -139,19 +134,19 @@ void iDraw()
         iPauseSound(0);
         if (selected_menu_idx == 0)
         {
-            iShowImage(50, 435, "assets/images/rsmyl.png");
+            iShowImage(50, 435, "assets/images/pm_resume_yellow.png");
         }
         else if (selected_menu_idx == 1)
         {
-            iShowImage(50, 375, "assets/images/opnyl.png");
+            iShowImage(50, 375, "assets/images/pm_option_yellow.png");
         }
         else if (selected_menu_idx == 2)
         {
-            iShowImage(50, 315, "assets/images/exitmmyl.png");
+            iShowImage(50, 315, "assets/images/pm_exittomm_yellow.png");
         }
         else if (selected_menu_idx == 3)
         {
-            iShowImage(50, 255, "assets/images/exitdskyl.png");
+            iShowImage(50, 255, "assets/images/pm_exittod_yellow.png");
         }
     }
 
@@ -162,15 +157,15 @@ void iDraw()
         iShowImage(0, 0, "assets/images/gameover1.jpg");
         iSetTransparentColor(0, 0, 0, 0.7);
         iFilledRectangle(10, 10, 980, 70);
-        iShowImage(63, 20, "assets/images/mainmenublue.png");
-        iShowImage(375, 20, "assets/images/tryagainblue.png");
-        iShowImage(687, 20, "assets/images/exitblue.png");
+        iShowImage(63, 20, "assets/images/gom_mainmenu_blue.png");
+        iShowImage(375, 20, "assets/images/gom_tryagain_blue.png");
+        iShowImage(687, 20, "assets/images/gom_exit_blue.png");
         if (gomcheck == 0)
-            iShowImage(63, 20, "assets/images/mainmenured.png");
+            iShowImage(63, 20, "assets/images/gom_mainmenu_red.png");
         if (gomcheck == 1)
-            iShowImage(375, 20, "assets/images/tryagainred.png");
+            iShowImage(375, 20, "assets/images/gom_tryagain_red.png");
         if (gomcheck == 2)
-            iShowImage(687, 20, "assets/images/exitred.png");
+            iShowImage(687, 20, "assets/images/gom_exit_red.png");
 
         iSetColor(0, 0, 0);
         iFilledRectangle(265, 150, 500, 70);
@@ -206,17 +201,34 @@ function iMouseMove() is called when the user moves the mouse.
 */
 void iMouseMove(int mx, int my)
 {
-    // if(gameState==1){
+    if (gameState == 0)
+    {
 
-    //     if (mx > paddle_width / 2 && mx < screen_width - paddle_width / 2)
-    //     {
-    //         dbx = (mx - paddle_width / 2);
-    //         if (dx == 0 && dy == 0)
-    //         {
-    //             ball_x = mx;
-    //         }
-    //     }
-    // }
+        if (my < 90 && my > 20)
+        {
+            selected_menu_idx = 6;
+        }
+        else if (my < 160 && my > 90)
+        {
+            selected_menu_idx = 5;
+        }
+        else if (my < 230 && my > 160)
+        {
+            selected_menu_idx = 4;
+        }
+        else if (my < 300 && my > 230)
+        {
+            selected_menu_idx = 3;
+        }
+        else if (my < 370 && my > 300)
+        {
+            selected_menu_idx = 2;
+        }
+        else if (my < 440 && my > 370)
+        {
+            selected_menu_idx = 1;
+        }
+    }
     if (gameState == 100)
     {
         if (my < 315 && my > 255)
@@ -245,7 +257,6 @@ void iMouseMove(int mx, int my)
         if (mx >= 687 && mx <= 937)
             gomcheck = 2;
     }
-
     if (gameState == 3)
     {
         controlsMenu();
@@ -281,19 +292,43 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
-    if (gameState == 101)
+    if (gameState == 0)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
-            if (dx == 0 && dy == 0)
+            if (selected_menu_idx == 1)
             {
-
-                dx = ball_spd * cos(pi / 4);
-                dy = ball_spd * sin(pi / 4);
+                // start game
+                resetGame();
+                gameState = 101;
+                iResumeTimer(0);
+                iStopAllSounds();
+            }
+            else if (selected_menu_idx == 2)
+            {
+                // load game
+                // gameState = 5;
+            }
+            else if (selected_menu_idx == 3)
+            {
+                // options
+                // gameState = 4;
+            }
+            else if (selected_menu_idx == 4)
+            {
+                // high score
+            }
+            else if (selected_menu_idx == 5)
+            {
+                // help menu
+                gameState = 3;
+            }
+            else if (selected_menu_idx == 6)
+            {
+                exit(0);
             }
         }
     }
-
     if (gameState == 100)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
@@ -301,14 +336,22 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 0)
             {
                 gameState = 101;
+                dx = 0;
+                dy = 0;
+                isBallMoving = false;
                 iResumeTimer(0);
                 iResumeSound(0);
             }
             if (selected_menu_idx == 1)
             {
+                // gameState = 4;
             }
             if (selected_menu_idx == 2)
             {
+                resetGame();
+                gameState = 0;
+                iStopAllSounds();
+                mbgchk = 1;
             }
             if (selected_menu_idx == 3)
             {
@@ -316,7 +359,19 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
-    //
+    if (gameState == 101)
+    {
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+        {
+            if (!isBallMoving)
+            {
+
+                dx = ball_spd * cos(pi / 4);
+                dy = ball_spd * sin(pi / 4);
+                isBallMoving = true;
+            }
+        }
+    }
     if (gameState == 2)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
@@ -328,10 +383,9 @@ void iMouse(int button, int state, int mx, int my)
             }
             else if (gomcheck == 1)
             {
-                gameState = 101;
+                resetGame();
                 isGameOver = false;
                 iStopAllSounds();
-                resetGame();
             }
             else if (gomcheck == 2)
             {
@@ -366,65 +420,50 @@ void iKeyboard(unsigned char key)
 
         case 'w':
         case 'W':
-            if (selected_menu_idx > 1)
-            {
-                selected_menu_idx--;
-            }
-            
-            else if (selected_menu_idx == 1)
-            {
-                selected_menu_idx = 6;
-            }
-            
+            selected_menu_idx = (selected_menu_idx + 5) % 7;
 
             break;
 
         case 's':
         case 'S':
-            if (selected_menu_idx < 6)
-            {
-                selected_menu_idx++;
-            }
-            else if (selected_menu_idx == 6) 
-            {
-                selected_menu_idx = 1;
-            }
+            selected_menu_idx = (selected_menu_idx + 1) % 7;
             break;
-        
+
         case ' ':
         case '\r':
             if (selected_menu_idx == 1)
             {
-                //main game
+                // main game
+                resetGame();
                 gameState = 101;
                 iResumeTimer(0);
                 iStopAllSounds();
-                resetGame();
             }
 
             else if (selected_menu_idx == 2)
             {
-                
+                // load game
+                // gameState = 5;
             }
 
             else if (selected_menu_idx == 3)
             {
                 // options
-                //gameState = 4;
+                // gameState = 4;
             }
-            
+
             else if (selected_menu_idx == 4)
             {
-                //high score
+                // high score
             }
             else if (selected_menu_idx == 5)
             {
                 // help menu
-                gameState = 3;  
+                gameState = 3;
             }
             else if (selected_menu_idx == 6)
-            {   
-                // exit 
+            {
+                // exit
                 exit(0);
             }
             selected_menu_idx = 0;
@@ -460,12 +499,14 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 0)
             {
                 gameState = 101;
+                dx = 0;
+                dy = 0;
                 iResumeTimer(0);
                 iResumeSound(0);
             }
             if (selected_menu_idx == 1)
             {
-                //gameState = 4;
+                // gameState = 4;
             }
             if (selected_menu_idx == 2)
             {
@@ -518,17 +559,19 @@ void iKeyboard(unsigned char key)
         // place your codes for other keys here
         case ' ':
         {
-            if (dx == 0 && dy == 0)
+            if (!isBallMoving)
             {
 
                 dx = ball_spd * cos(pi / 4);
                 dy = ball_spd * sin(pi / 4);
+                isBallMoving = true;
             }
             break;
         }
         case 27:
             gameState = 100;
             iPauseTimer(0);
+            iPauseSound(0);
             break;
 
         default:
@@ -567,10 +610,10 @@ void iKeyboard(unsigned char key)
             }
             else if (gomcheck == 1)
             {
+                resetGame();
                 gameState = 101;
                 isGameOver = false;
                 iStopAllSounds();
-                resetGame();
             }
             else if (gomcheck == 2)
             {
@@ -626,6 +669,11 @@ void iKeyboard(unsigned char key)
 }
 void ballMotion()
 {
+    if (!isBallMoving || gameState != 101)
+    {
+        return;
+    }
+
     ball_x += dx;
     ball_y += dy;
     float position = ((paddle_x + dbx + paddle_width / 2) - ball_x) / (paddle_width / 2);
@@ -657,7 +705,10 @@ void ballMotion()
         lives--;
         iPlaySound("assets/sounds/lifelost.wav");
         dbx = 0;
-        dx = dy = 0;
+        dx = 0;
+        dy = 0;
+
+        isBallMoving = false;
         ball_x = paddle_x + dbx + paddle_width / 2;
         ball_y = paddle_height + paddle_y + ball_radius;
     }
@@ -686,14 +737,17 @@ void iSpecialKeyboard(unsigned char key)
 
 void resetGame(void)
 {
+    dx = 0;
+    dy = 0;
     dbx = 0;
-    dx = dy = 0;
+    isBallMoving = false;
     ball_x = paddle_x + dbx + paddle_width / 2;
     ball_y = paddle_height + paddle_y + ball_radius;
     lives = 1;
     score = 0;
-    gameState = 101;
-    iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+    bgchk = 1;
+    isGameOver = false;
+    // iPlaySound("assets/sounds/gamebg1.wav", true, 40);
 }
 int main(int argc, char *argv[])
 {
@@ -717,20 +771,19 @@ void controlsMenu(void)
 
 void pauseMenu(void)
 {
-    iShowImage(50, 255, "assets/images/exitdeswh.png");
-    iShowImage(50, 315, "assets/images/exitmmwh.png");
-    iShowImage(50, 375, "assets/images/opnwh.png");
-    iShowImage(50, 435, "assets/images/rsmwh.png");
+    iShowImage(50, 255, "assets/images/pm_exittod_white.png");
+    iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
+    iShowImage(50, 375, "assets/images/pm_option_white.png");
+    iShowImage(50, 435, "assets/images/pm_resume_white.png");
 }
 
 void mainMenu(void)
 {
     iShowImage(0, 0, "assets/images/mainmenubg2.png");
-    iShowImage(350, 500, "assets/images/NEW GAME (1).png");
-    iText(350, mainmenu_spacing * 6, "PLAY GAME");
-    iText(350, mainmenu_spacing * 5, "LOAD GAME");
-    iText(350, mainmenu_spacing * 4, "OPTIONS");
-    iText(350, mainmenu_spacing * 3, "HIGH SCORE");
-    iText(350, mainmenu_spacing * 2, "HELP");
-    iText(350, mainmenu_spacing, "EXIT");
+    iShowImage(360, 20, "assets/images/mm_exit_white.png");
+    iShowImage(360, 90, "assets/images/mm_help_white.png");
+    iShowImage(360, 160, "assets/images/mm_options_white.png");
+    iShowImage(360, 230, "assets/images/mm_highscore_white.png");
+    iShowImage(360, 300, "assets/images/mm_loadgame_white.png");
+    iShowImage(360, 370, "assets/images/mm_newgame_white.png");
 }
