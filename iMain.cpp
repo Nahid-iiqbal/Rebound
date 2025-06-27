@@ -767,7 +767,7 @@ void ballMotion()
                     int block_x = j * block_width;
                     int block_y = screen_height - (i + 1) * block_height - 70;
 
-                    if ((ball_x > block_x) && (ball_x < block_x + block_width))
+                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
                     {
                         if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
                         {
@@ -782,7 +782,7 @@ void ballMotion()
                             break;
                         }
                     }
-                    if ((ball_y > block_y) && (ball_y < block_y + block_height))
+                    if ((ball_y >= block_y) && (ball_y <= block_y + block_height))
                     {
                         if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
                         {
