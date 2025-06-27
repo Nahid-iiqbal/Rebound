@@ -38,34 +38,33 @@ char block_path[4][30] = {
     "assets/images/blocks/1.png",
     "assets/images/blocks/2.png",
     "assets/images/blocks/3.png",
-    "assets/images/blocks/4.png"
-};
+    "assets/images/blocks/4.png"};
 
 int blockGrid[20][20] = {
-    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1},
-    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0},
-    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
-    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0},
-    {0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
-    {1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1},
-    {1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0},
-    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
-    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
-    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0},
-    {0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
-    {1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
-    {0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1},
-    {1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0},
-    {0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1},
-    {1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0},
-    {0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1},
-    {1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0}
-};
-
+    {1, 0, 2, 3, 4, 2, 4, 1, 0, 3, 2, 0, 3, 1, 4, 3, 4, 2, 1, 0},
+    {3, 1, 0, 4, 2, 0, 1, 3, 4, 2, 1, 2, 4, 0, 3, 2, 1, 3, 0, 4},
+    {4, 2, 1, 0, 3, 4, 3, 0, 2, 1, 0, 3, 2, 1, 4, 1, 0, 4, 3, 2},
+    {0, 4, 3, 2, 1, 1, 2, 4, 3, 0, 3, 1, 0, 2, 4, 4, 3, 0, 1, 2},
+    {2, 3, 4, 1, 0, 3, 1, 2, 4, 0, 0, 4, 1, 3, 2, 2, 1, 4, 0, 3},
+    {4, 0, 3, 2, 1, 2, 0, 4, 1, 3, 1, 3, 2, 0, 4, 0, 2, 1, 3, 4},
+    {3, 4, 0, 1, 2, 1, 3, 2, 0, 4, 2, 4, 0, 3, 1, 3, 0, 2, 4, 1},
+    {0, 2, 1, 3, 4, 4, 2, 0, 1, 3, 3, 0, 1, 4, 2, 1, 4, 3, 2, 0},
+    {1, 3, 2, 4, 0, 0, 1, 3, 2, 4, 4, 2, 0, 1, 3, 2, 3, 1, 0, 4},
+    {2, 1, 4, 0, 3, 3, 4, 1, 0, 2, 1, 0, 4, 3, 2, 4, 1, 0, 3, 2},
+    {1, 2, 0, 4, 3, 2, 0, 3, 4, 1, 0, 1, 3, 4, 2, 1, 3, 2, 4, 0},
+    {3, 0, 1, 2, 4, 0, 2, 1, 3, 4, 4, 3, 0, 2, 1, 0, 4, 1, 2, 3},
+    {0, 4, 3, 1, 2, 1, 4, 0, 2, 3, 3, 2, 1, 0, 4, 2, 0, 3, 1, 4},
+    {2, 1, 4, 3, 0, 3, 0, 2, 1, 4, 0, 1, 4, 2, 3, 3, 2, 0, 4, 1},
+    {4, 3, 1, 0, 2, 0, 1, 4, 3, 2, 2, 4, 3, 1, 0, 1, 0, 4, 2, 3},
+    {0, 1, 2, 3, 4, 1, 3, 0, 4, 2, 1, 2, 0, 4, 3, 4, 3, 2, 1, 0},
+    {2, 4, 3, 0, 1, 0, 4, 2, 1, 3, 3, 0, 2, 1, 4, 1, 2, 3, 0, 4},
+    {3, 0, 1, 4, 2, 2, 1, 3, 0, 4, 0, 3, 1, 4, 2, 2, 4, 0, 3, 1},
+    {1, 2, 4, 0, 3, 4, 0, 1, 2, 3, 2, 1, 0, 3, 4, 3, 0, 1, 2, 4},
+    {4, 3, 0, 2, 1, 1, 2, 4, 3, 0, 0, 4, 2, 1, 3, 1, 2, 4, 0, 3}};
 
 // block1 col = 00ffb5, 004d37
+// block2 col = 00aaff, 00334d
+// block3 col = ff4800, 4d1600
 
 /*
 gamestate:
@@ -84,6 +83,7 @@ void mainMenu(void);
 void controlsMenu(void);
 void pauseMenu(void);
 void drawBlocks(void);
+void loadingScreen(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -139,6 +139,7 @@ void iDraw()
     // main game (level 1)
     if (gameState == 101)
     {
+        iClear();
         iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
         iSetColor(213, 105, 43);
@@ -458,14 +459,14 @@ void iKeyboard(unsigned char key)
         case 'w':
         case 'W':
             selected_menu_idx = (selected_menu_idx + 6) % 7;
-            if(selected_menu_idx == 0)
+            if (selected_menu_idx == 0)
                 selected_menu_idx = 1; // wrap around to the last option
             break;
 
         case 's':
         case 'S':
             selected_menu_idx = (selected_menu_idx + 1) % 7;
-            if(selected_menu_idx == 0)
+            if (selected_menu_idx == 0)
                 selected_menu_idx = 6;
             break;
 
@@ -539,6 +540,7 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 0)
             {
                 gameState = 101;
+                loadingScreen();
                 dx = 0;
                 dy = 0;
                 iResumeTimer(0);
@@ -752,50 +754,95 @@ void ballMotion()
         ball_y = paddle_height + paddle_y + ball_radius;
     }
 
-
     // Collision
     if (ball_y > 280)
     {
-        for (int i = 0; i < 20; i++)
+        bool hit = false;
+        for (int i = 0; i < 20 && !hit; i++)
         {
-            for (int j = 0; j < 20; j++)
+            for (int j = 0; j < 20 && !hit; j++)
             {
                 if (blockGrid[i][j] > 0)
                 {
                     int block_x = j * block_width;
                     int block_y = screen_height - (i + 1) * block_height - 70;
-                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
+
+                    if ((ball_x > block_x) && (ball_x < block_x + block_width))
                     {
                         if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
                         {
-                            blockGrid[i][j] -= 1;
-                            score += 10;
                             dy *= (-1);
+                            if (blockGrid[i][j] != 4)
+                            {
+                                blockGrid[i][j] -= 1;
+                                score += 50;
+                            }
                             iPlaySound("assets/sounds/bounce.wav");
-                            continue;
+                            hit = true;
+                            break;
                         }
                     }
                     if ((ball_y > block_y) && (ball_y < block_y + block_height))
                     {
                         if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
                         {
-                            blockGrid[i][j] -= 1;
-                            score += 10;
                             dx *= (-1);
+                            if (blockGrid[i][j] != 4)
+                            {
+                                blockGrid[i][j] -= 1;
+                                score += 50;
+                            }
                             iPlaySound("assets/sounds/bounce.wav");
+                            hit = true;
+                            break;
                         }
                     }
-                    // else if (((ball_x + ball_radius/sqrt(2) == j*block_width) || (ball_x - ball_radius/sqrt(2) == (j+1)*block_width)) && (((ball_y + ball_radius/sqrt(2) == screen_height - (i+1)*block_height - 70 || (ball_y - ball_radius/sqrt(2) == screen_height - (i)*block_height - 70)))))
-                    // {
-                    //     blockGrid[i][j] -= 1;
-                    //     score += 10;
-                    //     dx *= (-1);
-                    //     dy *= (-1);
-                    //     iPlaySound("assets/sounds/bounce.wav");
                 }
             }
         }
     }
+
+
+    // ChatGPT code:
+
+    // if (ball_y > 280) {
+    // for (int i = 0; i < 20; i++) {
+    //     for (int j = 0; j < 20; j++) {
+    //         if (blockGrid[i][j] > 0) {
+    //             int block_x = j * block_width;
+    //             int block_y = screen_height - (i + 1) * block_height - 70;
+
+    //             // Axis-Aligned Bounding Box (AABB) collision
+    //             bool collisionX = (ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width);
+    //             bool collisionY = (ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height);
+
+    //             if (collisionX && collisionY) {
+    //                 // Reduce block life (except for indestructible blocks)
+    //                 if (blockGrid[i][j] != 4) {
+    //                     blockGrid[i][j] -= 1;
+    //                     score += 50;
+    //                 }
+
+    //                 // Determine bounce direction
+    //                 // Hit from top or bottom → reverse dy
+    //                 if (ball_y > block_y + block_height || ball_y < block_y) {
+    //                     dy *= -1;
+    //                     if (dy > 0) ball_y = block_y - ball_radius - 1;
+    //                     else ball_y = block_y + block_height + ball_radius + 1;
+    //                 }
+    //                 // Hit from side → reverse dx
+    //                 else {
+    //                     dx *= -1;
+    //                     if (dx > 0) ball_x = block_x - ball_radius - 1;
+    //                     else ball_x = block_x + block_width + ball_radius + 1;
+    //                 }
+
+    //                 iPlaySound("assets/sounds/bounce.wav");
+    //                 return; // Exit after one collision
+    //             }
+    //         }
+    //     }
+    // }
 }
 /*
 function iSpecialKeyboard() is called whenver user hits special keys likefunction
@@ -880,23 +927,45 @@ void drawBlocks(void)
         {
             if (blockGrid[i][j] == 1)
             {
-                //iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
                 iSetColor(0, 77, 55);
                 iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
                 iSetColor(0, 255, 181);
                 iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-
             }
 
             else if (blockGrid[i][j] == 2)
             {
-                //iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(0, 77, 55);
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(0, 51, 77);
                 iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(0, 255, 181);
+                iSetColor(0, 170, 255);
                 iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-
+            }
+            else if (blockGrid[i][j] == 3)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(77, 22, 0);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(255, 72, 0);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+            }
+            else if (blockGrid[i][j] == 4)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(128, 128, 128);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(192, 192, 192);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
             }
         }
     }
-} 
+}
+
+void loadingScreen(void)
+{
+    iSetColor(255, 255, 255);
+    iText(450, 100, "Loading...", GLUT_BITMAP_HELVETICA_18);
+    Sleep(1000);
+    iClear();
+}
