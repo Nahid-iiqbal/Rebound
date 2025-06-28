@@ -771,6 +771,8 @@ void ballMotion()
                     {
                         if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
                         {
+                            ball_x -= dx;
+                            ball_y -= dy;
                             dy *= (-1);
                             if (blockGrid[i][j] != 4)
                             {
@@ -786,6 +788,8 @@ void ballMotion()
                     {
                         if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
                         {
+                            ball_x -= dx;
+                            ball_y -= dy;
                             dx *= (-1);
                             if (blockGrid[i][j] != 4)
                             {
