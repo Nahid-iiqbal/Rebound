@@ -71,7 +71,10 @@ gamestate:
 0 = main menu
 1 = game
 2 = game over (i guess)
-3 = Controls menu
+3 = Highscore
+4 = Options
+5 = Help
+6 = Load Game
 
 110 = <main_game><level 1><base>
 100 = <main_game><paused>  [new experimental notation -rafid]
@@ -80,10 +83,13 @@ gamestate:
 ///////////////////////////////////////////////////////////////
 void resetGame(void);
 void mainMenu(void);
-void controlsMenu(void);
 void pauseMenu(void);
 void drawBlocks(void);
 void loadingScreen(void);
+void displayOptions(void);
+void displayHelp(void);
+void displayHighscore(void);
+void ballMotion(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -215,21 +221,20 @@ void iDraw()
     // controls menu
     else if (gameState == 3)
     {
-        controlsMenu();
-        iSetColor(255, 255, 255);
-        if (selected_menu_idx == 1)
-        {
-            iFilledCircle(300, 350, 5);
-        }
-        else if (selected_menu_idx == 2)
-        {
-            iFilledCircle(300, 300, 5);
-        }
-        else
-        {
-            iFilledCircle(300, 350, 5);
-            selected_menu_idx = 1;
-        }
+        // displayHighscore();
+    }
+    else if (gameState == 4)
+    {
+        // displayOptions();
+    }
+    else if (gameState == 5)
+    {
+        // displayHelp();
+    }
+
+    else if (gameState == 6)
+    {
+        // load game
     }
 }
 
@@ -309,22 +314,6 @@ void iMouseMove(int mx, int my)
     }
     if (gameState == 3)
     {
-        controlsMenu();
-        iSetColor(255, 255, 255);
-        if (selected_menu_idx == 1)
-        {
-            iFilledCircle(300, 350, 5);
-        }
-
-        if (selected_menu_idx == 2)
-        {
-            iFilledCircle(300, 300, 5);
-        }
-        else
-        {
-            iFilledCircle(300, 350, 5);
-            selected_menu_idx = 1;
-        }
     }
 }
 
@@ -357,21 +346,22 @@ void iMouse(int button, int state, int mx, int my)
             else if (selected_menu_idx == 2)
             {
                 // load game
-                // gameState = 5;
+                // gameState = 6;
             }
             else if (selected_menu_idx == 3)
             {
-                // options
-                // gameState = 4;
+                // high score
+                displayHighscore();
             }
             else if (selected_menu_idx == 4)
             {
-                // high score
+                // options
+                displayOptions();
             }
             else if (selected_menu_idx == 5)
             {
                 // help menu
-                gameState = 3;
+                displayHelp();
             }
             else if (selected_menu_idx == 6)
             {
@@ -461,8 +451,7 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    // main menu
-    if (gameState == 0)
+    if (gameState == 0)//main menu
     {
 
         switch (key)
@@ -496,23 +485,24 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 2)
             {
                 // load game
-                // gameState = 5;
+                // gameState = 6;
             }
 
             else if (selected_menu_idx == 3)
             {
                 // options
-                // gameState = 4;
+                displayOptions();
             }
 
             else if (selected_menu_idx == 4)
             {
                 // high score
+                displayHighscore();
             }
             else if (selected_menu_idx == 5)
             {
                 // help menu
-                gameState = 3;
+                displayHelp();
             }
             else if (selected_menu_idx == 6)
             {
@@ -526,8 +516,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    // pause menu
-    if (gameState == 100)
+    if (gameState == 100) // paused
     {
         switch (key)
         {
@@ -576,8 +565,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    // main game
-    if (gameState == 101)
+    if (gameState == 101) // game
     {
         switch (key)
         {
@@ -632,8 +620,7 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    // game over
-    if (gameState == 2)
+    if (gameState == 2) // game over
     {
         switch (key)
         {
@@ -679,48 +666,197 @@ void iKeyboard(unsigned char key)
         }
     }
 
-    if (gameState == 3) // controls menu
+    if (gameState == 3) // high score
     {
+        // displayHighscore();
         switch (key)
         {
-        case 'w':
-            if (selected_menu_idx > 1)
-            {
-                selected_menu_idx--;
-            }
-            else if (selected_menu_idx == 1)
-            {
-                selected_menu_idx = 2;
-            }
+        case 27:
+            gameState = 0;
             break;
-
-        case 's':
-            if (selected_menu_idx < 2)
-            {
-                selected_menu_idx++;
-            }
-            else if (selected_menu_idx == 2)
-            {
-                selected_menu_idx = 1;
-            }
+        default:
             break;
-
-        case ' ':
-        case '\r':
-            if (selected_menu_idx == 1)
-                gameState = 0;
-            if (selected_menu_idx == 2)
-                exit(0);
-
-            selected_menu_idx = 0;
+        }
+    }
+    
+    if (gameState == 4) // options menu
+    {
+        // displayOptions();
+        switch (key)
+        {
+        case 27:
+            gameState = 0;
             break;
+        default:
+            break;
+        }
+    }
 
+    if (gameState == 5) // help menu
+    {
+        // displayHelp();
+        switch (key)
+        {
+        case 27:
+            gameState = 0;
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (gameState == 6) // load game
+    {
+        // load game
+        switch (key)
+        {
+        case 27:
+            gameState = 0;
+            break;
         default:
             break;
         }
     }
 }
-void ballMotion()
+
+/*
+function iSpecialKeyboard() is called whenver user hits special keys likefunction
+keys, home, end, pg up, pg down, arraows etc. you have to use
+appropriate constants to detect them. A list is:
+GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
+GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11,
+GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
+GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
+GLUT_KEY_INSERT */
+
+void iSpecialKeyboard(unsigned char key)
+{
+    switch (key)
+    {
+    case GLUT_KEY_END:
+        // do something
+        break;
+    // place your codes for other keys here
+    default:
+        break;
+    }
+}
+
+int main(int argc, char *argv[])
+{
+    glutInit(&argc, argv);
+    iSetTimer(15, ballMotion);
+
+    // place your own initialization codes here.
+    iInitializeSound();
+    iInitialize(screen_width, screen_height, "Rebound by 2405051 and 2405042");
+    return 0;
+}
+
+void resetGame(void)
+{
+    dx = 0;
+    dy = 0;
+    dbx = 0;
+    isBallMoving = false;
+    ball_x = paddle_x + dbx + paddle_width / 2;
+    ball_y = paddle_height + paddle_y + ball_radius;
+    lives = 1;
+    score = 0;
+    bgchk = 1;
+    isGameOver = false;
+    gameState = 101;
+}
+
+void pauseMenu(void)
+{
+    iShowImage(50, 255, "assets/images/pm_exittod_white.png");
+    iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
+    iShowImage(50, 375, "assets/images/pm_option_white.png");
+    iShowImage(50, 435, "assets/images/pm_resume_white.png");
+}
+
+void mainMenu(void)
+{
+    iShowImage(0, 0, "assets/images/mainmenubg2.png");
+    iShowImage(360, 20, "assets/images/mm_exit_white.png");
+    iShowImage(360, 90, "assets/images/mm_help_white.png");
+    iShowImage(360, 160, "assets/images/mm_options_white.png");
+    iShowImage(360, 230, "assets/images/mm_highscore_white.png");
+    iShowImage(360, 300, "assets/images/mm_loadgame_white.png");
+    iShowImage(360, 370, "assets/images/mm_newgame_white.png");
+}
+
+void drawBlocks(void)
+{
+    for (int i = 0; i < 20; i++)
+    {
+        for (int j = 0; j < 20; j++)
+        {
+            if (blockGrid[i][j] == 1)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(0, 77, 55);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(0, 255, 181);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+            }
+
+            else if (blockGrid[i][j] == 2)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(0, 51, 77);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(0, 170, 255);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+            }
+            else if (blockGrid[i][j] == 3)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(77, 22, 0);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(255, 72, 0);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+            }
+            else if (blockGrid[i][j] == 4)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                iSetColor(128, 128, 128);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(192, 192, 192);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+            }
+        }
+    }
+}
+
+void loadingScreen(void)
+{
+    iSetColor(255, 255, 255);
+    iText(450, 100, "Loading...", GLUT_BITMAP_HELVETICA_18);
+    Sleep(1000);
+    iClear();
+}
+
+void displayOptions(void)
+{
+    gameState = 4;
+    iSetColor(0, 0, 0);
+    iFilledRectangle(0, 0, screen_width, screen_height);
+}
+void displayHelp(void)
+{
+    gameState = 5;
+    iSetColor(0, 0, 0);
+    iFilledRectangle(0, 0, screen_width, screen_height);
+}
+void displayHighscore(void)
+{
+    gameState = 3;
+    iSetColor(0, 0, 0);
+    iFilledRectangle(0, 0, screen_width, screen_height);
+}
+void ballMotion(void)
 {
     if (ball_y > 280)
     {
@@ -858,129 +994,4 @@ void ballMotion()
     //         }
     //     }
     // }
-}
-/*
-function iSpecialKeyboard() is called whenver user hits special keys likefunction
-keys, home, end, pg up, pg down, arraows etc. you have to use
-appropriate constants to detect them. A list is:
-GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
-GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11,
-GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
-GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
-GLUT_KEY_INSERT */
-void iSpecialKeyboard(unsigned char key)
-{
-    switch (key)
-    {
-    case GLUT_KEY_END:
-        // do something
-        break;
-    // place your codes for other keys here
-    default:
-        break;
-    }
-}
-
-void resetGame(void)
-{
-    dx = 0;
-    dy = 0;
-    dbx = 0;
-    isBallMoving = false;
-    ball_x = paddle_x + dbx + paddle_width / 2;
-    ball_y = paddle_height + paddle_y + ball_radius;
-    lives = 1;
-    score = 0;
-    bgchk = 1;
-    isGameOver = false;
-    gameState = 101;
-}
-int main(int argc, char *argv[])
-{
-    glutInit(&argc, argv);
-    iSetTimer(15, ballMotion);
-
-    // place your own initialization codes here.
-    iInitializeSound();
-    iInitialize(screen_width, screen_height, "Breaking Ball");
-    return 0;
-}
-
-void controlsMenu(void)
-{
-    iSetColor(255, 255, 255);
-    iText(350, 450, "You don't know how to play DXBALL?", GLUT_BITMAP_HELVETICA_18);
-    iText(450, 500, "LOL NOOB", GLUT_BITMAP_HELVETICA_18);
-    iText(420, 350, "Just wanted to check");
-    iText(360, 300, "I don't wanna play this shit anymore");
-}
-
-void pauseMenu(void)
-{
-    iShowImage(50, 255, "assets/images/pm_exittod_white.png");
-    iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
-    iShowImage(50, 375, "assets/images/pm_option_white.png");
-    iShowImage(50, 435, "assets/images/pm_resume_white.png");
-}
-
-void mainMenu(void)
-{
-    iShowImage(0, 0, "assets/images/mainmenubg2.png");
-    iShowImage(360, 20, "assets/images/mm_exit_white.png");
-    iShowImage(360, 90, "assets/images/mm_help_white.png");
-    iShowImage(360, 160, "assets/images/mm_options_white.png");
-    iShowImage(360, 230, "assets/images/mm_highscore_white.png");
-    iShowImage(360, 300, "assets/images/mm_loadgame_white.png");
-    iShowImage(360, 370, "assets/images/mm_newgame_white.png");
-}
-
-void drawBlocks(void)
-{
-    for (int i = 0; i < 20; i++)
-    {
-        for (int j = 0; j < 20; j++)
-        {
-            if (blockGrid[i][j] == 1)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(0, 77, 55);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(0, 255, 181);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-
-            else if (blockGrid[i][j] == 2)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(0, 51, 77);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(0, 170, 255);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-            else if (blockGrid[i][j] == 3)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(77, 22, 0);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(255, 72, 0);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-            else if (blockGrid[i][j] == 4)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(128, 128, 128);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(192, 192, 192);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-        }
-    }
-}
-
-void loadingScreen(void)
-{
-    iSetColor(255, 255, 255);
-    iText(450, 100, "Loading...", GLUT_BITMAP_HELVETICA_18);
-    Sleep(1000);
-    iClear();
 }
