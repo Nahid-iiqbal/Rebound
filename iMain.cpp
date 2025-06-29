@@ -16,7 +16,7 @@ int paddle_width = 100;
 int paddle_height = 10;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
-int ball_radius = 6;
+int ball_radius = 8;
 int lives = 1;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
@@ -239,6 +239,18 @@ function iMouseMove() is called when the user moves the mouse.
 */
 void iMouseMove(int mx, int my)
 {
+    if (gameState == 101)
+    {
+        paddle_x = (mx - paddle_width / 2) % screen_width;
+        if (paddle_x < 0)
+            paddle_x = 0;
+        else if (paddle_x > screen_width - paddle_width)
+            paddle_x = screen_width - paddle_width;
+
+        if (!isBallMoving)
+            ball_x = paddle_x + dbx + paddle_width / 2;
+    }
+
     if (gameState == 0)
     {
 
@@ -416,8 +428,9 @@ void iMouse(int button, int state, int mx, int my)
         {
             if (gomcheck == 0)
             {
-                gameState = 0;
                 iStopAllSounds();
+                mbgchk = 1;
+                gameState = 0;
             }
             else if (gomcheck == 1)
             {
@@ -470,7 +483,6 @@ void iKeyboard(unsigned char key)
                 selected_menu_idx = 6;
             break;
 
-        case ' ':
         case '\r':
             if (selected_menu_idx == 1)
             {
@@ -645,9 +657,9 @@ void iKeyboard(unsigned char key)
 
             if (gomcheck == 0)
             {
-                gameState = 0;
                 iStopAllSounds();
                 mbgchk = 1;
+                gameState = 0;
             }
             else if (gomcheck == 1)
             {
@@ -710,51 +722,6 @@ void iKeyboard(unsigned char key)
 }
 void ballMotion()
 {
-    if (!isBallMoving || gameState != 101)
-    {
-        return;
-    }
-
-    ball_x += dx;
-    ball_y += dy;
-    float position = ((paddle_x + dbx + paddle_width / 2) - ball_x) / (paddle_width / 2);
-    float angle = (pi / 2) + position * (pi / 3);
-
-    if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
-    {
-        dx *= (-1);
-        iPlaySound("assets/sounds/bounce.wav");
-    }
-
-    if (ball_y + ball_radius > screen_height)
-    {
-        dy *= (-1);
-        iPlaySound("assets/sounds/bounce.wav");
-    }
-
-    if (dx != 0 && dy != 0 && ball_x >= paddle_x + dbx && ball_x <= paddle_x + paddle_width + dbx && ball_y - ball_radius <= paddle_height + paddle_y && ball_y - ball_radius >= paddle_y)
-    {
-        score += 20;
-        ball_y = paddle_y + paddle_height + ball_radius;
-        if (dx != 0 && dy != 0)
-            iPlaySound("assets/sounds/bounce.wav");
-        dx = ball_spd * cos(angle);
-        dy = ball_spd * sin(angle);
-    }
-    if (ball_y < paddle_y)
-    {
-        lives--;
-        iPlaySound("assets/sounds/lifelost.wav");
-        dbx = 0;
-        dx = 0;
-        dy = 0;
-
-        isBallMoving = false;
-        ball_x = paddle_x + dbx + paddle_width / 2;
-        ball_y = paddle_height + paddle_y + ball_radius;
-    }
-
-    // Collision
     if (ball_y > 280)
     {
         bool hit = false;
@@ -805,7 +772,51 @@ void ballMotion()
             }
         }
     }
+    if (!isBallMoving || gameState != 101)
+    {
+        return;
+    }
 
+    ball_x += dx;
+    ball_y += dy;
+    float position = ((paddle_x + dbx + paddle_width / 2) - ball_x) / (paddle_width / 2);
+    float angle = (pi / 2) + position * (pi / 3);
+
+    if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
+    {
+        dx *= (-1);
+        iPlaySound("assets/sounds/bounce.wav");
+    }
+
+    if (ball_y + ball_radius > screen_height)
+    {
+        dy *= (-1);
+        iPlaySound("assets/sounds/bounce.wav");
+    }
+
+    if (dx != 0 && dy != 0 && ball_x >= paddle_x + dbx && ball_x <= paddle_x + paddle_width + dbx && ball_y - ball_radius <= paddle_height + paddle_y && ball_y - ball_radius >= paddle_y)
+    {
+        score += 20;
+        ball_y = paddle_y + paddle_height + ball_radius;
+        if (dx != 0 && dy != 0)
+            iPlaySound("assets/sounds/bounce.wav");
+        dx = ball_spd * cos(angle);
+        dy = ball_spd * sin(angle);
+    }
+    if (ball_y < paddle_y)
+    {
+        lives--;
+        iPlaySound("assets/sounds/lifelost.wav");
+        dbx = 0;
+        dx = 0;
+        dy = 0;
+
+        isBallMoving = false;
+        ball_x = paddle_x + dbx + paddle_width / 2;
+        ball_y = paddle_height + paddle_y + ball_radius;
+    }
+
+    // Collision
 
     // ChatGPT code:
 
@@ -882,7 +893,7 @@ void resetGame(void)
     score = 0;
     bgchk = 1;
     isGameOver = false;
-    // iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+    gameState = 101;
 }
 int main(int argc, char *argv[])
 {
