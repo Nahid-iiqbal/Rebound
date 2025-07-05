@@ -1,19 +1,20 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <math.h>
+#include <windows.h>
 #include "iGraphics.h"
 #include "iSound.h"
-
 // variables///////////////////////////////////////////////////////////
 float pi = 3.14159;
 float dx;
 float dy;
-int bgchk = 1, mbgchk = 1;
+int bgchk = 1, mbgchk = 1, mmchannel = -1;
+int chofmm, chofgame;
 float ball_spd = 5.0;
 int screen_width = 1000;
 int screen_height = 750;
-int paddle_width = 100;
-int paddle_height = 10;
+int paddle_width = 150;
+int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
 int ball_radius = 8;
@@ -23,6 +24,8 @@ float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
 int dbx = 0;
 bool isGameOver = false;
+bool isFullscreen = false;
+int offset_x = 0, offset_y = 0;
 int gameState = 0;
 char scoreText[10];
 char lifeText[10];
@@ -30,7 +33,10 @@ int gomcheck = 0;
 int max_menu_optn = 1;
 int selected_menu_idx = 1;
 int mainmenu_spacing = 50;
+int prevGameState = 0;
 bool isBallMoving = false;
+bool mm_sound_check = true;
+bool game_sound_check = true;
 int block_width = 50;
 int block_height = 20;
 int block_padding = 2;
@@ -90,6 +96,8 @@ void displayOptions(void);
 void displayHelp(void);
 void displayHighscore(void);
 void ballMotion(void);
+void toggleFullscreen(void);
+void toggleMenuMusic(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -98,15 +106,17 @@ function iDraw() is called again and again by the system.
 void iDraw()
 {
     iClear();
-
+    glPushMatrix();
+    glTranslatef(offset_x, offset_y, 0);
     // main menu
     if (gameState == 0)
     {
 
         mainMenu();
-        if (mbgchk)
+        if (mbgchk && mm_sound_check && gameState == 0)
         {
-            iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+            if (mmchannel == -1)
+                mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
             mbgchk = 0;
         }
         iSetColor(255, 255, 255);
@@ -147,7 +157,7 @@ void iDraw()
     {
         iClear();
         iShowImage(0, 0, "assets/images/1.png");
-        iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_n.png");
+        iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
         drawBlocks();
@@ -158,7 +168,7 @@ void iDraw()
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
-        if (bgchk)
+        if (bgchk && game_sound_check)
         {
             iPlaySound("assets/sounds/gamebg1.wav", true, 40);
             bgchk = 0;
@@ -225,7 +235,49 @@ void iDraw()
     }
     else if (gameState == 4)
     {
-        // displayOptions();
+        displayOptions();
+        if (selected_menu_idx == 0)
+        {
+            iShowImage(50, screen_height - 310, "assets/images/opn-opnbg1.png");
+            iSetColor(255, 0, 0);
+            iTextTTF(70, screen_height - 290, "FULLSCREEN", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+        }
+        else if (selected_menu_idx == 1)
+        {
+            if (mm_sound_check)
+            {
+                iShowImage(50, screen_height - 380, "assets/images/opn-opnbg1.png");
+                iSetColor(255, 0, 0);
+                iTextTTF(70, screen_height - 360, "MAIN MENU MUSIC : ON", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+            }
+            else
+            {
+                iShowImage(50, screen_height - 380, "assets/images/opn-opnbg1.png");
+                iSetColor(255, 0, 0);
+                iTextTTF(70, screen_height - 360, "MAIN MENU MUSIC : OFF", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+            }
+        }
+        else if (selected_menu_idx == 2)
+        {
+            if (game_sound_check)
+            {
+                iShowImage(50, screen_height - 450, "assets/images/opn-opnbg1.png");
+                iSetColor(255, 0, 0);
+                iTextTTF(70, screen_height - 430, "GAME MUSIC : ON", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+            }
+            else
+            {
+                iShowImage(50, screen_height - 450, "assets/images/opn-opnbg1.png");
+                iSetColor(255, 0, 0);
+                iTextTTF(70, screen_height - 430, "GAME MUSIC : OFF", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+            }
+        }
+        else if (selected_menu_idx == 3)
+        {
+            iShowImage(50, screen_height - 520, "assets/images/opn-opnbg1.png");
+            iSetColor(255, 0, 0);
+            iTextTTF(70, screen_height - 500, "BACK", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+        }
     }
     else if (gameState == 5)
     {
@@ -236,6 +288,7 @@ void iDraw()
     {
         // load game
     }
+    glPopMatrix();
 }
 
 /*
@@ -244,14 +297,16 @@ function iMouseMove() is called when the user moves the mouse.
 */
 void iMouseMove(int mx, int my)
 {
+    mx -= offset_x;
+    my -= offset_y;
     if (gameState == 101)
     {
-        paddle_x = (mx - paddle_width / 2) % screen_width;
-        if (paddle_x < 0)
-            paddle_x = 0;
-        else if (paddle_x > screen_width - paddle_width)
-            paddle_x = screen_width - paddle_width;
-
+        // Clamp mx to [paddle_width/2, screen_width - paddle_width/2]
+        if (mx < paddle_width / 2)
+            mx = paddle_width / 2;
+        if (mx > screen_width - paddle_width / 2)
+            mx = screen_width - paddle_width / 2;
+        paddle_x = mx - paddle_width / 2;
         if (!isBallMoving)
             ball_x = paddle_x + dbx + paddle_width / 2;
     }
@@ -315,6 +370,25 @@ void iMouseMove(int mx, int my)
     if (gameState == 3)
     {
     }
+    if (gameState == 4)
+    {
+        if (my < screen_height - 240 && my > screen_height - 310)
+        {
+            selected_menu_idx = 0;
+        }
+        else if (my < screen_height - 310 && my > screen_height - 380)
+        {
+            selected_menu_idx = 1;
+        }
+        else if (my < screen_height - 380 && my > screen_height - 450)
+        {
+            selected_menu_idx = 2;
+        }
+        else if (my < screen_height - 450 && my > screen_height - 520)
+        {
+            selected_menu_idx = 3;
+        }
+    }
 }
 
 /*5unction iMouseDrag() is called when the user presses and drags the mouse.
@@ -331,6 +405,9 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
+    // Adjust for offset
+    mx -= offset_x;
+    my -= offset_y;
     if (gameState == 0)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
@@ -356,6 +433,7 @@ void iMouse(int button, int state, int mx, int my)
             else if (selected_menu_idx == 4)
             {
                 // options
+                prevGameState = gameState;
                 displayOptions();
             }
             else if (selected_menu_idx == 5)
@@ -376,15 +454,13 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 0)
             {
                 gameState = 101;
-                dx = 0;
-                dy = 0;
-                isBallMoving = false;
                 iResumeTimer(0);
                 iResumeSound(0);
             }
             if (selected_menu_idx == 1)
             {
-                // gameState = 4;
+                prevGameState = gameState;
+                displayOptions();
             }
             if (selected_menu_idx == 2)
             {
@@ -434,6 +510,35 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
+    if (gameState == 4)
+    {
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+        {
+            if (selected_menu_idx == 0)
+            {
+                toggleFullscreen();
+            }
+            else if (selected_menu_idx == 1)
+            {
+                // toggle main menu music
+                mm_sound_check = !mm_sound_check;
+                if (mm_sound_check)
+                    iPauseSound(0);
+                else
+                    iResumeSound(0);
+                toggleMenuMusic();
+            }
+            else if (selected_menu_idx == 2)
+            {
+                // toggle game music
+                game_sound_check = !game_sound_check;
+            }
+            else if (selected_menu_idx == 3)
+            {
+                gameState = prevGameState;
+            }
+        }
+    }
 }
 
 /*
@@ -451,7 +556,7 @@ key- holds the ASCII value of the key pressed.
 */
 void iKeyboard(unsigned char key)
 {
-    if (gameState == 0)//main menu
+    if (gameState == 0) // main menu
     {
 
         switch (key)
@@ -491,6 +596,7 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 3)
             {
                 // options
+                prevGameState = gameState;
                 displayOptions();
             }
 
@@ -541,15 +647,13 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 0)
             {
                 gameState = 101;
-                loadingScreen();
-                dx = 0;
-                dy = 0;
                 iResumeTimer(0);
                 iResumeSound(0);
             }
             if (selected_menu_idx == 1)
             {
-                // gameState = 4;
+                prevGameState = gameState;
+                displayOptions();
             }
             if (selected_menu_idx == 2)
             {
@@ -571,39 +675,25 @@ void iKeyboard(unsigned char key)
         {
         case 'd':
         case 'D':
-            dbx += 20;
-            if ((paddle_x + dbx) >= screen_width - paddle_width)
-                dbx -= 20;
-            if (dx == 0 && dy == 0)
-            {
-                ball_x += 20;
-                if (ball_x >= (screen_width - paddle_width / 2))
-                {
-                    ball_x -= 20;
-                }
-            }
+            paddle_x += 20;
+            if (paddle_x > screen_width - paddle_width)
+                paddle_x = screen_width - paddle_width;
+            if (!isBallMoving)
+                ball_x = paddle_x + paddle_width / 2;
             break;
         case 'a':
         case 'A':
-            dbx -= 20;
-            if ((paddle_x + dbx) <= 0)
-                dbx += 20;
-            if (dx == 0 && dy == 0)
-            {
-                ball_x -= 20;
-                if (ball_x <= paddle_width / 2)
-                {
-                    ball_x += 20;
-                }
-            }
-
+            paddle_x -= 20;
+            if (paddle_x < 0)
+                paddle_x = 0;
+            if (!isBallMoving)
+                ball_x = paddle_x + paddle_width / 2;
             break;
         // place your codes for other keys here
         case ' ':
         {
             if (!isBallMoving)
             {
-
                 dx = ball_spd * cos(pi / 4);
                 dy = ball_spd * sin(pi / 4);
                 isBallMoving = true;
@@ -678,15 +768,43 @@ void iKeyboard(unsigned char key)
             break;
         }
     }
-    
+
     if (gameState == 4) // options menu
     {
         // displayOptions();
         switch (key)
         {
+        case 'w':
+        case 'W':
+            selected_menu_idx = (selected_menu_idx + 3) % 4;
+            break;
+        case 's':
+        case 'S':
+            selected_menu_idx = (selected_menu_idx + 1) % 4;
+            break;
         case 27:
             gameState = 0;
             break;
+        case ' ':
+        case '\r':
+            if (selected_menu_idx == 0)
+            {
+                toggleFullscreen();
+            }
+            else if (selected_menu_idx == 1)
+            {
+                mm_sound_check = !mm_sound_check;
+                toggleMenuMusic();
+            }
+            else if (selected_menu_idx == 2)
+            {
+                game_sound_check = !game_sound_check;
+            }
+            else if (selected_menu_idx == 3)
+            {
+                gameState = 0;
+            }
+
         default:
             break;
         }
@@ -746,7 +864,6 @@ int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
     iSetTimer(15, ballMotion);
-
     // place your own initialization codes here.
     iInitializeSound();
     iInitialize(screen_width, screen_height, "Rebound by 2405051 and 2405042");
@@ -841,8 +958,30 @@ void loadingScreen(void)
 void displayOptions(void)
 {
     gameState = 4;
-    iSetColor(0, 0, 0);
-    iFilledRectangle(0, 0, screen_width, screen_height);
+    iShowImage(0, 0, "assets/images/background2.jpg");
+    iShowImage(50, screen_height - 310, "assets/images/opn-opnbg1.png");
+    iShowImage(50, screen_height - 380, "assets/images/opn-opnbg1.png");
+    iShowImage(50, screen_height - 450, "assets/images/opn-opnbg1.png");
+    iShowImage(50, screen_height - 520, "assets/images/opn-opnbg1.png");
+    iSetColor(255, 255, 255);
+    iTextTTF(70, screen_height - 290, "FULLSCREEN", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
+    if (mm_sound_check)
+    {
+        iTextTTF(70, screen_height - 360, "MAIN MENU MUSIC : ON", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
+    }
+    else
+    {
+        iTextTTF(70, screen_height - 360, "MAIN MENU MUSIC : OFF", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
+    }
+    if (game_sound_check)
+    {
+        iTextTTF(70, screen_height - 430, "GAME MUSIC : ON", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
+    }
+    else
+    {
+        iTextTTF(70, screen_height - 430, "GAME MUSIC : OFF", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
+    }
+    iTextTTF(70, screen_height - 500, "BACK", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
 }
 void displayHelp(void)
 {
@@ -994,4 +1133,42 @@ void ballMotion(void)
     //         }
     //     }
     // }
+}
+void toggleFullscreen(void)
+{
+    iToggleFullscreen();
+    isFullscreen = !isFullscreen;
+    if (isFullscreen)
+    {
+        int screen_w = GetSystemMetrics(SM_CXSCREEN);
+        int screen_h = GetSystemMetrics(SM_CYSCREEN);
+        offset_x = (screen_w - screen_width) / 2;
+        offset_y = (screen_h - screen_height) / 2;
+    }
+    else
+    {
+        offset_x = 0;
+        offset_y = 0;
+    }
+}
+void toggleMenuMusic(void)
+{
+    if (mm_sound_check) // If music should be ON
+    {
+        if (mmchannel == -1) // Not playing yet
+        {
+            mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+        }
+        else
+        {
+            iResumeSound(mmchannel); // Resume if paused
+        }
+    }
+    else // If music should be OFF
+    {
+        if (mmchannel != -1)
+        {
+            iPauseSound(mmchannel); // Pause if playing
+        }
+    }
 }
