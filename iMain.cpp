@@ -8,7 +8,7 @@
 float pi = 3.14159;
 float dx;
 float dy;
-int bgchk = 1, mbgchk = 1, mmchannel = -1;
+int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
 int chofmm, chofgame;
 float ball_spd = 5.0;
 int screen_width = 1000;
@@ -18,7 +18,7 @@ int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
 int ball_radius = 8;
-int lives = 1;
+int lives = 3;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
 float ball_y = paddle_height + paddle_y + ball_radius;
@@ -37,6 +37,8 @@ int prevGameState = 0;
 bool isBallMoving = false;
 bool mm_sound_check = true;
 bool game_sound_check = true;
+int level = 1;
+bool loadingDone = false;
 int block_width = 50;
 int block_height = 20;
 int block_padding = 2;
@@ -62,7 +64,7 @@ int blockGrid[20][20] = {
     {0, 4, 3, 1, 2, 1, 4, 0, 2, 3, 3, 2, 1, 0, 4, 2, 0, 3, 1, 4},
     {2, 1, 4, 3, 0, 3, 0, 2, 1, 4, 0, 1, 4, 2, 3, 3, 2, 0, 4, 1},
     {4, 3, 1, 0, 2, 0, 1, 4, 3, 2, 2, 4, 3, 1, 0, 1, 0, 4, 2, 3},
-    {0, 1, 2, 3, 4, 1, 3, 0, 4, 2, 1, 2, 0, 4, 3, 4, 3, 2, 1, 0},
+    {0, 1, 2, 3, 4, 1, 3, 0, 4, 2, 1, 2, 0, 4, 3, 4, 3, 0, 0, 0},
     {2, 4, 3, 0, 1, 0, 4, 2, 1, 3, 3, 0, 2, 1, 4, 1, 2, 3, 0, 4},
     {3, 0, 1, 4, 2, 2, 1, 3, 0, 4, 0, 3, 1, 4, 2, 2, 4, 0, 3, 1},
     {1, 2, 4, 0, 3, 4, 0, 1, 2, 3, 2, 1, 0, 3, 4, 3, 0, 1, 2, 4},
@@ -98,6 +100,8 @@ void displayHighscore(void);
 void ballMotion(void);
 void toggleFullscreen(void);
 void toggleMenuMusic(void);
+void toggleGameMusic(void);
+void loadScreen(int gamestate);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -150,12 +154,23 @@ void iDraw()
         {
             iShowImage(360, 20, "assets/images/mm_exit_red.png");
         }
+
+        // if (gamechannel != -1)
+        // {
+        //     iStopSound(gamechannel);
+        //     gamechannel = -1;
+        // }
     }
 
     // main game (level 1)
     if (gameState == 101)
     {
         iClear();
+        // if (mmchannel != -1)
+        // {
+        //     iStopSound(mmchannel);
+        //     mmchannel = -1;
+        // }
         iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
         iSetColor(213, 105, 43);
@@ -170,7 +185,10 @@ void iDraw()
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         if (bgchk && game_sound_check)
         {
-            iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+            if (gamechannel == -1)
+                gamechannel = iPlaySound("assets/sounds/gamebg1.wav", true, 40);
+            else
+                iResumeSound(gamechannel);
             bgchk = 0;
         }
         if (lives < 1 && !isGameOver)
@@ -185,7 +203,8 @@ void iDraw()
     else if (gameState == 100)
     {
         pauseMenu();
-        iPauseSound(0);
+        if (gamechannel != -1)
+            iPauseSound(gamechannel);
         if (selected_menu_idx == 0)
         {
             iShowImage(50, 435, "assets/images/pm_resume_yellow.png");
@@ -207,7 +226,11 @@ void iDraw()
     // game over
     else if (gameState == 2)
     {
-        iStopSound(0);
+        if (gamechannel != -1)
+        {
+            iStopSound(gamechannel);
+            gamechannel = -1;
+        }
         iShowImage(0, 0, "assets/images/gameover1.jpg");
         iSetTransparentColor(0, 0, 0, 0.7);
         iFilledRectangle(10, 10, 980, 70);
@@ -301,7 +324,6 @@ void iMouseMove(int mx, int my)
     my -= offset_y;
     if (gameState == 101)
     {
-        // Clamp mx to [paddle_width/2, screen_width - paddle_width/2]
         if (mx < paddle_width / 2)
             mx = paddle_width / 2;
         if (mx > screen_width - paddle_width / 2)
@@ -455,7 +477,8 @@ void iMouse(int button, int state, int mx, int my)
             {
                 gameState = 101;
                 iResumeTimer(0);
-                iResumeSound(0);
+                iResumeSound(gamechannel);
+                bgchk = 1;
             }
             if (selected_menu_idx == 1)
             {
@@ -465,9 +488,9 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 2)
             {
                 resetGame();
-                gameState = 0;
-                iStopAllSounds();
                 mbgchk = 1;
+                iStopSound(gamechannel);
+                gameState = 0;
             }
             if (selected_menu_idx == 3)
             {
@@ -479,13 +502,6 @@ void iMouse(int button, int state, int mx, int my)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
-            // if (!isBallMoving)
-            // {
-
-            //     dx = ball_spd * cos(pi / 4);
-            //     dy = ball_spd * sin(pi / 4);
-            //     isBallMoving = true;
-            // }
         }
     }
     if (gameState == 2)
@@ -522,16 +538,13 @@ void iMouse(int button, int state, int mx, int my)
             {
                 // toggle main menu music
                 mm_sound_check = !mm_sound_check;
-                if (mm_sound_check)
-                    iPauseSound(0);
-                else
-                    iResumeSound(0);
                 toggleMenuMusic();
             }
             else if (selected_menu_idx == 2)
             {
                 // toggle game music
                 game_sound_check = !game_sound_check;
+                toggleGameMusic();
             }
             else if (selected_menu_idx == 3)
             {
@@ -567,7 +580,7 @@ void iKeyboard(unsigned char key)
         case 'W':
             selected_menu_idx = (selected_menu_idx + 6) % 7;
             if (selected_menu_idx == 0)
-                selected_menu_idx = 1; // wrap around to the last option
+                selected_menu_idx = 1;
             break;
 
         case 's':
@@ -658,9 +671,9 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 2)
             {
                 resetGame();
-                gameState = 0;
                 iStopAllSounds();
                 mbgchk = 1;
+                gameState = 0;
             }
             if (selected_menu_idx == 3)
             {
@@ -689,7 +702,6 @@ void iKeyboard(unsigned char key)
             if (!isBallMoving)
                 ball_x = paddle_x + paddle_width / 2;
             break;
-        // place your codes for other keys here
         case ' ':
         {
             if (!isBallMoving)
@@ -762,6 +774,7 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
         case 27:
+            mbgchk = 1;
             gameState = 0;
             break;
         default:
@@ -783,7 +796,8 @@ void iKeyboard(unsigned char key)
             selected_menu_idx = (selected_menu_idx + 1) % 4;
             break;
         case 27:
-            gameState = 0;
+            mbgchk = 1;
+            gameState = prevGameState;
             break;
         case ' ':
         case '\r':
@@ -799,11 +813,13 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 2)
             {
                 game_sound_check = !game_sound_check;
+                toggleGameMusic();
             }
             else if (selected_menu_idx == 3)
             {
-                gameState = 0;
+                gameState = prevGameState;
             }
+            break;
 
         default:
             break;
@@ -816,7 +832,8 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
         case 27:
-            gameState = 0;
+            mbgchk = 1;
+            gameState = prevGameState;
             break;
         default:
             break;
@@ -829,6 +846,7 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
         case 27:
+            mbgchk = 1;
             gameState = 0;
             break;
         default:
@@ -878,7 +896,7 @@ void resetGame(void)
     isBallMoving = false;
     ball_x = paddle_x + dbx + paddle_width / 2;
     ball_y = paddle_height + paddle_y + ball_radius;
-    lives = 1;
+    lives = 3;
     score = 0;
     bgchk = 1;
     isGameOver = false;
@@ -1090,49 +1108,6 @@ void ballMotion(void)
         ball_x = paddle_x + dbx + paddle_width / 2;
         ball_y = paddle_height + paddle_y + ball_radius;
     }
-
-    // Collision
-
-    // ChatGPT code:
-
-    // if (ball_y > 280) {
-    // for (int i = 0; i < 20; i++) {
-    //     for (int j = 0; j < 20; j++) {
-    //         if (blockGrid[i][j] > 0) {
-    //             int block_x = j * block_width;
-    //             int block_y = screen_height - (i + 1) * block_height - 70;
-
-    //             // Axis-Aligned Bounding Box (AABB) collision
-    //             bool collisionX = (ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width);
-    //             bool collisionY = (ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height);
-
-    //             if (collisionX && collisionY) {
-    //                 // Reduce block life (except for indestructible blocks)
-    //                 if (blockGrid[i][j] != 4) {
-    //                     blockGrid[i][j] -= 1;
-    //                     score += 50;
-    //                 }
-
-    //                 // Determine bounce direction
-    //                 // Hit from top or bottom → reverse dy
-    //                 if (ball_y > block_y + block_height || ball_y < block_y) {
-    //                     dy *= -1;
-    //                     if (dy > 0) ball_y = block_y - ball_radius - 1;
-    //                     else ball_y = block_y + block_height + ball_radius + 1;
-    //                 }
-    //                 // Hit from side → reverse dx
-    //                 else {
-    //                     dx *= -1;
-    //                     if (dx > 0) ball_x = block_x - ball_radius - 1;
-    //                     else ball_x = block_x + block_width + ball_radius + 1;
-    //                 }
-
-    //                 iPlaySound("assets/sounds/bounce.wav");
-    //                 return; // Exit after one collision
-    //             }
-    //         }
-    //     }
-    // }
 }
 void toggleFullscreen(void)
 {
@@ -1153,22 +1128,56 @@ void toggleFullscreen(void)
 }
 void toggleMenuMusic(void)
 {
-    if (mm_sound_check) // If music should be ON
+    if (mm_sound_check)
     {
-        if (mmchannel == -1) // Not playing yet
+        if (gameState == 0)
         {
-            mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+            if (mmchannel == -1)
+                mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+            else
+                iResumeSound(mmchannel);
+        }
+    }
+    else
+    {
+        if (mmchannel != -1)
+            iPauseSound(mmchannel);
+    }
+}
+
+void toggleGameMusic(void)
+{
+    if (game_sound_check)
+    {
+        if (gamechannel == -1)
+        {
+            gamechannel = iPlaySound("assets/sounds/gamebg1.wav", true, 40);
         }
         else
         {
-            iResumeSound(mmchannel); // Resume if paused
+            iResumeSound(gamechannel);
         }
     }
-    else // If music should be OFF
+    else
     {
-        if (mmchannel != -1)
-        {
-            iPauseSound(mmchannel); // Pause if playing
-        }
+        if (gamechannel != -1)
+            iPauseSound(gamechannel);
     }
+}
+
+void loadFinished(void)
+{
+    loadingDone = true;
+}
+
+void loadScreen(int gamestate)
+{
+    iSetColor(0, 0, 0);
+    iFilledRectangle(0, 0, screen_width, screen_height);
+    iSetColor(0, 255, 255);
+    iTextTTF(450, 100, "Loading Level ", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+    int level = gamestate / 100;
+    sprintf(scoreText, "%d", level);
+    iTextTTF(600, 100, scoreText, "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+    iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
