@@ -39,7 +39,10 @@ bool mm_sound_check = true;
 bool game_sound_check = true;
 int level = 1;
 bool loadingDone = false;
-float block_width = 1000.0/15;
+
+/// block variables///
+
+float block_width = 1000.0 / 15;
 float block_height = 30;
 int block_padding = 3;
 char block_path[4][30] = {
@@ -47,19 +50,95 @@ char block_path[4][30] = {
     "assets/images/blocks/2.png",
     "assets/images/blocks/3.png",
     "assets/images/blocks/4.png"};
+int levelGrid[5][15][15] = {
+    {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    },
+    {
+        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0},
+        {0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0},
+        {0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    },
+    {
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
 
-int blockGrid[10][15] = {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-};
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+
+        {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
+        {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
+        {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
+
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+    },
+    {
+        {1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3},
+        {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
+        {3, 0, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 0, 3},
+        {2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2},
+        {1, 0, 3, 0, 1, 2, 3, 4, 1, 2, 3, 0, 3, 0, 1},
+        {2, 0, 2, 0, 4, 0, 0, 0, 0, 0, 4, 0, 2, 0, 2},
+        {3, 0, 1, 0, 3, 0, 1, 2, 3, 0, 3, 0, 1, 0, 3},
+        {4, 0, 4, 0, 2, 0, 4, 0, 2, 0, 2, 0, 4, 0, 4},
+        {1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 1, 0, 3, 0, 1},
+        {2, 0, 2, 0, 4, 0, 2, 0, 4, 0, 4, 0, 2, 0, 2},
+        {3, 0, 1, 0, 3, 0, 1, 2, 3, 0, 3, 0, 1, 0, 3},
+        {4, 0, 4, 0, 2, 0, 0, 0, 0, 0, 2, 0, 4, 0, 4},
+        {1, 0, 3, 0, 1, 2, 3, 4, 1, 2, 3, 0, 3, 0, 1},
+        {2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2},
+        {3, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 1},
+    },
+    {{},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {},
+     {}}};
+int blockGrid[15][15] = {0};
 
 // block1 col = 00ffb5, 004d37
 // block2 col = 00aaff, 00334d
@@ -94,6 +173,9 @@ void toggleMenuMusic(void);
 void toggleGameMusic(void);
 void loadScreen(int gamestate);
 void checkCollision(void);
+int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
+bool isLevelCleared();
+void loadNextLevel();
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -109,12 +191,16 @@ void iDraw()
     {
 
         mainMenu();
-        if (mbgchk && mm_sound_check && gameState == 0)
+        if (mbgchk && mm_sound_check)
         {
-            if (mmchannel == -1)
-                mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+            playOrResumeSound(&mmchannel, "assets/sounds/mus_menu6.wav", true, 40);
             mbgchk = 0;
         }
+        if (!mm_sound_check && mmchannel != -1)
+        {
+            iPauseSound(mmchannel);
+        }
+
         iSetColor(255, 255, 255);
 
         if (selected_menu_idx == 1)
@@ -145,6 +231,19 @@ void iDraw()
         else if (selected_menu_idx == 6)
         {
             iShowImage(360, 20, "assets/images/mm_exit_red.png");
+        }
+        else if (gameState == 7 && !loadingDone)
+        {
+            iClear();
+            iSetColor(0, 0, 0);
+            iFilledRectangle(0, 0, screen_width, screen_height);
+
+            iSetColor(255, 255, 255);
+            iTextTTF(420, 380, "Loading Level...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 30);
+
+            char levelText[20];
+            sprintf(levelText, "Level %d", level);
+            iTextTTF(460, 330, levelText, "assets/fonts/RubikDoodleShadow-Regular.ttf", 28);
         }
 
         // if (gamechannel != -1)
@@ -177,12 +276,14 @@ void iDraw()
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         if (bgchk && game_sound_check)
         {
-            if (gamechannel == -1)
-                gamechannel = iPlaySound("assets/sounds/gamebg1.wav", true, 40);
-            else
-                iResumeSound(gamechannel);
+            playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
             bgchk = 0;
         }
+        if (!game_sound_check && gamechannel != -1)
+        {
+            iPauseSound(gamechannel);
+        }
+
         if (lives < 1 && !isGameOver)
         {
             iPlaySound("assets/sounds/mus_gameover.wav", false);
@@ -893,10 +994,26 @@ void resetGame(void)
     bgchk = 1;
     isGameOver = false;
     gameState = 101;
+    for (int i = 0; i < 10; i++)
+        for (int j = 0; j < 15; j++)
+            blockGrid[i][j] = 0;
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 15; j++)
+        {
+            blockGrid[i][j] = levelGrid[level - 1][i][j];
+        }
+    }
 }
 
 void pauseMenu(void)
 {
+    if (gamechannel != -1)
+    {
+        iStopSound(gamechannel);
+        gamechannel = -1;
+    }
+
     iShowImage(50, 255, "assets/images/pm_exittod_white.png");
     iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
     iShowImage(50, 375, "assets/images/pm_option_white.png");
@@ -916,7 +1033,7 @@ void mainMenu(void)
 
 void drawBlocks(void)
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
         {
@@ -1051,6 +1168,12 @@ void ballMotion(void)
         ball_x = paddle_x + dbx + paddle_width / 2;
         ball_y = paddle_height + paddle_y + ball_radius;
     }
+
+    if (isLevelCleared())
+    {
+        level++;
+        loadNextLevel();
+    }
 }
 void toggleFullscreen(void)
 {
@@ -1069,17 +1192,11 @@ void toggleFullscreen(void)
         offset_y = 0;
     }
 }
-void toggleMenuMusic(void)
+void toggleMenuMusic()
 {
     if (mm_sound_check)
     {
-        if (gameState == 0)
-        {
-            if (mmchannel == -1)
-                mmchannel = iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
-            else
-                iResumeSound(mmchannel);
-        }
+        playOrResumeSound(&mmchannel, "assets/sounds/mus_menu6.wav", true, 40);
     }
     else
     {
@@ -1088,18 +1205,11 @@ void toggleMenuMusic(void)
     }
 }
 
-void toggleGameMusic(void)
+void toggleGameMusic()
 {
     if (game_sound_check)
     {
-        if (gamechannel == -1)
-        {
-            gamechannel = iPlaySound("assets/sounds/gamebg1.wav", true, 40);
-        }
-        else
-        {
-            iResumeSound(gamechannel);
-        }
+        playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
     }
     else
     {
@@ -1176,4 +1286,51 @@ void checkCollision(void)
             }
         }
     }
+}
+
+int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume)
+{
+    if (*channelVar != -1 && Mix_Playing(*channelVar))
+    {
+        iResumeSound(*channelVar);
+    }
+    else
+    {
+        if (*channelVar != -1)
+        {
+            iStopSound(*channelVar); // Free previous chunk
+        }
+        *channelVar = iPlaySound(filename, loop, volume);
+    }
+    return *channelVar;
+}
+bool isLevelCleared()
+{
+    for (int i = 0; i < 10; i++)
+    {
+        for (int j = 0; j < 15; j++)
+        {
+            if (blockGrid[i][j] != 0)
+                return false;
+        }
+    }
+    return true;
+}
+void loadNextLevel()
+{
+    if (level >= 5)
+        level = 1; // wrap around or stop here if you want game over
+
+    gameState = 7; // 6 = loading state
+    loadingDone = false;
+    iPauseTimer(0); // pause movement
+    iPauseSound(gamechannel);
+
+    // Delay a bit and then load next level
+    Sleep(1000); // simulate loading time
+    resetGame(); // load level data and reset
+    loadingDone = true;
+    gameState = 101;
+    iResumeTimer(0);
+    bgchk = 1;
 }
