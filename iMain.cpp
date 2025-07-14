@@ -10,14 +10,14 @@ float dx;
 float dy;
 int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
 int chofmm, chofgame;
-float ball_spd = 5.0;
+float ball_spd = 8.0;
 int screen_width = 1000;
 int screen_height = 750;
 int paddle_width = 150;
 int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
-int ball_radius = 8;
+int ball_radius = 10;
 int lives = 3;
 int score = 0;
 float ball_x = paddle_x + paddle_width / 2;
@@ -39,36 +39,27 @@ bool mm_sound_check = true;
 bool game_sound_check = true;
 int level = 1;
 bool loadingDone = false;
-int block_width = 50;
-int block_height = 20;
-int block_padding = 2;
+float block_width = 1000.0/15;
+float block_height = 30;
+int block_padding = 3;
 char block_path[4][30] = {
     "assets/images/blocks/1.png",
     "assets/images/blocks/2.png",
     "assets/images/blocks/3.png",
     "assets/images/blocks/4.png"};
 
-int blockGrid[20][20] = {
-    {1, 0, 2, 3, 4, 2, 4, 1, 0, 3, 2, 0, 3, 1, 4, 3, 4, 2, 1, 0},
-    {3, 1, 0, 4, 2, 0, 1, 3, 4, 2, 1, 2, 4, 0, 3, 2, 1, 3, 0, 4},
-    {4, 2, 1, 0, 3, 4, 3, 0, 2, 1, 0, 3, 2, 1, 4, 1, 0, 4, 3, 2},
-    {0, 4, 3, 2, 1, 1, 2, 4, 3, 0, 3, 1, 0, 2, 4, 4, 3, 0, 1, 2},
-    {2, 3, 4, 1, 0, 3, 1, 2, 4, 0, 0, 4, 1, 3, 2, 2, 1, 4, 0, 3},
-    {4, 0, 3, 2, 1, 2, 0, 4, 1, 3, 1, 3, 2, 0, 4, 0, 2, 1, 3, 4},
-    {3, 4, 0, 1, 2, 1, 3, 2, 0, 4, 2, 4, 0, 3, 1, 3, 0, 2, 4, 1},
-    {0, 2, 1, 3, 4, 4, 2, 0, 1, 3, 3, 0, 1, 4, 2, 1, 4, 3, 2, 0},
-    {1, 3, 2, 4, 0, 0, 1, 3, 2, 4, 4, 2, 0, 1, 3, 2, 3, 1, 0, 4},
-    {2, 1, 4, 0, 3, 3, 4, 1, 0, 2, 1, 0, 4, 3, 2, 4, 1, 0, 3, 2},
-    {1, 2, 0, 4, 3, 2, 0, 3, 4, 1, 0, 1, 3, 4, 2, 1, 3, 2, 4, 0},
-    {3, 0, 1, 2, 4, 0, 2, 1, 3, 4, 4, 3, 0, 2, 1, 0, 4, 1, 2, 3},
-    {0, 4, 3, 1, 2, 1, 4, 0, 2, 3, 3, 2, 1, 0, 4, 2, 0, 3, 1, 4},
-    {2, 1, 4, 3, 0, 3, 0, 2, 1, 4, 0, 1, 4, 2, 3, 3, 2, 0, 4, 1},
-    {4, 3, 1, 0, 2, 0, 1, 4, 3, 2, 2, 4, 3, 1, 0, 1, 0, 4, 2, 3},
-    {0, 1, 2, 3, 4, 1, 3, 0, 4, 2, 1, 2, 0, 4, 3, 4, 3, 0, 0, 0},
-    {2, 4, 3, 0, 1, 0, 4, 2, 1, 3, 3, 0, 2, 1, 4, 1, 2, 3, 0, 4},
-    {3, 0, 1, 4, 2, 2, 1, 3, 0, 4, 0, 3, 1, 4, 2, 2, 4, 0, 3, 1},
-    {1, 2, 4, 0, 3, 4, 0, 1, 2, 3, 2, 1, 0, 3, 4, 3, 0, 1, 2, 4},
-    {4, 3, 0, 2, 1, 1, 2, 4, 3, 0, 0, 4, 2, 1, 3, 1, 2, 4, 0, 3}};
+int blockGrid[10][15] = {
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+};
 
 // block1 col = 00ffb5, 004d37
 // block2 col = 00aaff, 00334d
@@ -102,6 +93,7 @@ void toggleFullscreen(void);
 void toggleMenuMusic(void);
 void toggleGameMusic(void);
 void loadScreen(int gamestate);
+void checkCollision(void);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -924,9 +916,9 @@ void mainMenu(void)
 
 void drawBlocks(void)
 {
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 10; i++)
     {
-        for (int j = 0; j < 20; j++)
+        for (int j = 0; j < 15; j++)
         {
             if (blockGrid[i][j] == 1)
             {
@@ -1015,56 +1007,7 @@ void displayHighscore(void)
 }
 void ballMotion(void)
 {
-    if (ball_y > 280)
-    {
-        bool hit = false;
-        for (int i = 0; i < 20 && !hit; i++)
-        {
-            for (int j = 0; j < 20 && !hit; j++)
-            {
-                if (blockGrid[i][j] > 0)
-                {
-                    int block_x = j * block_width;
-                    int block_y = screen_height - (i + 1) * block_height - 70;
-
-                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
-                    {
-                        if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
-                        {
-                            ball_x -= dx;
-                            ball_y -= dy;
-                            dy *= (-1);
-                            if (blockGrid[i][j] != 4)
-                            {
-                                blockGrid[i][j] -= 1;
-                                score += 50;
-                            }
-                            iPlaySound("assets/sounds/bounce.wav");
-                            hit = true;
-                            break;
-                        }
-                    }
-                    if ((ball_y >= block_y) && (ball_y <= block_y + block_height))
-                    {
-                        if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
-                        {
-                            ball_x -= dx;
-                            ball_y -= dy;
-                            dx *= (-1);
-                            if (blockGrid[i][j] != 4)
-                            {
-                                blockGrid[i][j] -= 1;
-                                score += 50;
-                            }
-                            iPlaySound("assets/sounds/bounce.wav");
-                            hit = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
+    checkCollision();
     if (!isBallMoving || gameState != 101)
     {
         return;
@@ -1180,4 +1123,57 @@ void loadScreen(int gamestate)
     sprintf(scoreText, "%d", level);
     iTextTTF(600, 100, scoreText, "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
+}
+void checkCollision(void)
+{
+    if (ball_y > 280)
+    {
+        bool hit = false;
+        for (int i = 0; i < 10 && !hit; i++)
+        {
+            for (int j = 0; j < 15 && !hit; j++)
+            {
+                if (blockGrid[i][j] > 0)
+                {
+                    int block_x = j * block_width;
+                    int block_y = screen_height - (i + 1) * block_height - 70;
+
+                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
+                    {
+                        if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
+                        {
+                            ball_x -= dx;
+                            ball_y -= dy;
+                            dy *= (-1);
+                            if (blockGrid[i][j] != 4)
+                            {
+                                blockGrid[i][j] -= 1;
+                                score += 50;
+                            }
+                            iPlaySound("assets/sounds/bounce.wav");
+                            hit = true;
+                            break;
+                        }
+                    }
+                    if ((ball_y >= block_y) && (ball_y <= block_y + block_height))
+                    {
+                        if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
+                        {
+                            ball_x -= dx;
+                            ball_y -= dy;
+                            dx *= (-1);
+                            if (blockGrid[i][j] != 4)
+                            {
+                                blockGrid[i][j] -= 1;
+                                score += 50;
+                            }
+                            iPlaySound("assets/sounds/bounce.wav");
+                            hit = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
