@@ -45,11 +45,12 @@ bool loadingDone = false;
 float block_width = 1000.0 / 15;
 float block_height = 30;
 int block_padding = 3;
-char block_path[4][30] = {
-    "assets/images/blocks/1.png",
+char block_path[5][100] = {
+    "assets/images/explode_block.png",
     "assets/images/blocks/2.png",
     "assets/images/blocks/3.png",
-    "assets/images/blocks/4.png"};
+    "assets/images/blocks/4.png",
+    "assets/images/explode_block.png"};
 int levelGrid[5][15][15] = {
     {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -70,14 +71,14 @@ int levelGrid[5][15][15] = {
     },
     {
         {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0},
-        {0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0},
-        {0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0},
-        {0, 0, 0, 1, 2, 2, 2, 2, 2, 1, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 1, 2, 2, 2, 1, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 1, 2, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 5, 1, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 2, 5, 2, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 1, 2, 2, 5, 2, 2, 1, 0, 0, 0, 0, 0},
+        {0, 0, 1, 2, 2, 2, 5, 2, 2, 2, 1, 0, 0, 0, 0},
+        {0, 0, 1, 2, 2, 2, 5, 2, 2, 2, 1, 0, 0, 0, 0},
+        {0, 0, 0, 1, 2, 2, 5, 2, 2, 1, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 1, 2, 5, 2, 1, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 1, 5, 1, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -176,6 +177,7 @@ void checkCollision(void);
 int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
 bool isLevelCleared();
 void loadNextLevel();
+void explode(int i, int j);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -288,6 +290,7 @@ void iDraw()
         {
             iPlaySound("assets/sounds/mus_gameover.wav", false);
             isGameOver = true;
+            level = 1;
             gameState = 2;
         }
     }
@@ -1070,6 +1073,17 @@ void drawBlocks(void)
                 iSetColor(192, 192, 192);
                 iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
             }
+            else if (blockGrid[i][j] == 5)
+            {
+                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+
+                iSetColor(0, 0, 0);
+                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
+                iSetColor(255, 0, 0);
+                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
+                iSetColor(255, 0, 255);
+                iFilledRectangle(j * block_width + 40.0 / 3, screen_height - (i + 1) * block_height + 10 - 70, block_width - 2 * 40.0 / 3, block_height - 2 * 10);
+            }
         }
     }
 }
@@ -1239,7 +1253,7 @@ void checkCollision(void)
     if (ball_y > 280)
     {
         bool hit = false;
-        for (int i = 0; i < 10 && !hit; i++)
+        for (int i = 0; i < 15 && !hit; i++)
         {
             for (int j = 0; j < 15 && !hit; j++)
             {
@@ -1255,10 +1269,14 @@ void checkCollision(void)
                             ball_x -= dx;
                             ball_y -= dy;
                             dy *= (-1);
-                            if (blockGrid[i][j] != 4)
+                            if (blockGrid[i][j] < 4)
                             {
                                 blockGrid[i][j] -= 1;
                                 score += 50;
+                            }
+                            if (blockGrid[i][j] == 5)
+                            {
+                                explode(i, j);
                             }
                             iPlaySound("assets/sounds/bounce.wav");
                             hit = true;
@@ -1333,4 +1351,34 @@ void loadNextLevel()
     gameState = 101;
     iResumeTimer(0);
     bgchk = 1;
+}
+
+void explode(int i, int j)
+{
+    if (i < 0 || i >= 10 || j < 0 || j >= 15)
+        return;
+
+    if (blockGrid[i][j] == 0 || blockGrid[i][j] == 4)
+        return; // Skip empty/unbreakable
+
+    if (blockGrid[i][j] == 5) // Exploding block
+    {
+        blockGrid[i][j] = 0;
+        score += 50;
+        for (int di = -1; di <= 1; di++)
+        {
+            for (int dj = -1; dj <= 1; dj++)
+            {
+                int ni = i + di;
+                int nj = j + dj;
+                explode(ni, nj); // Recursive explosion
+            }
+        }
+    }
+    else
+    {
+        blockGrid[i][j] = 0;
+        score += 50;
+    }
+    iPlaySound("assets/sounds/explosion.mp3");
 }
