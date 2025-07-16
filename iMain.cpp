@@ -39,6 +39,8 @@ bool mm_sound_check = true;
 bool game_sound_check = true;
 int level = 1;
 bool loadingDone = false;
+int levelClearedCounter = 0;
+bool levelClearedAnimating = false;
 
 /// block variables///
 
@@ -164,7 +166,6 @@ void resetGame(void);
 void mainMenu(void);
 void pauseMenu(void);
 void drawBlocks(void);
-void loadingScreen(void);
 void displayOptions(void);
 void displayHelp(void);
 void displayHighscore(void);
@@ -191,7 +192,6 @@ void iDraw()
     // main menu
     if (gameState == 0)
     {
-
         mainMenu();
         if (mbgchk && mm_sound_check)
         {
@@ -234,36 +234,12 @@ void iDraw()
         {
             iShowImage(360, 20, "assets/images/mm_exit_red.png");
         }
-        else if (gameState == 7 && !loadingDone)
-        {
-            iClear();
-            iSetColor(0, 0, 0);
-            iFilledRectangle(0, 0, screen_width, screen_height);
-
-            iSetColor(255, 255, 255);
-            iTextTTF(420, 380, "Loading Level...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 30);
-
-            char levelText[20];
-            sprintf(levelText, "Level %d", level);
-            iTextTTF(460, 330, levelText, "assets/fonts/RubikDoodleShadow-Regular.ttf", 28);
-        }
-
-        // if (gamechannel != -1)
-        // {
-        //     iStopSound(gamechannel);
-        //     gamechannel = -1;
-        // }
     }
 
     // main game (level 1)
     if (gameState == 101)
     {
         iClear();
-        // if (mmchannel != -1)
-        // {
-        //     iStopSound(mmchannel);
-        //     mmchannel = -1;
-        // }
         iShowImage(0, 0, "assets/images/1.png");
         iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
         iSetColor(213, 105, 43);
@@ -276,6 +252,9 @@ void iDraw()
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
+        char levelText[20];
+        sprintf(levelText, "Level: %d", level);
+        iTextTTF(460, screen_height - 30, levelText, "assets/fonts/DancingScript-Medium.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
@@ -407,6 +386,37 @@ void iDraw()
     {
         // load game
     }
+    else if (gameState == 7)
+    {
+        if (!levelClearedAnimating)
+        {
+            levelClearedCounter = 0;
+            levelClearedAnimating = true;
+            iPauseTimer(0);
+        }
+
+        static int frameDelay = 0;
+        frameDelay++;
+
+        if (frameDelay < 90)
+        {
+            iSetColor(237, 184, 38);
+            iTextTTF(290, 350, "LEVEL CLEARED!", "assets/fonts/Bungee-Regular.ttf", 50);
+        }
+
+        if (frameDelay > 200)
+        {
+            frameDelay = 0;
+            levelClearedCounter++;
+        }
+
+        if (levelClearedCounter >= 5)
+        {
+            levelClearedAnimating = false;
+            frameDelay = 0;
+            loadNextLevel();
+        }
+    }
     glPopMatrix();
 }
 
@@ -418,17 +428,6 @@ void iMouseMove(int mx, int my)
 {
     mx -= offset_x;
     my -= offset_y;
-    if (gameState == 101)
-    {
-        if (mx < paddle_width / 2)
-            mx = paddle_width / 2;
-        if (mx > screen_width - paddle_width / 2)
-            mx = screen_width - paddle_width / 2;
-        paddle_x = mx - paddle_width / 2;
-        if (!isBallMoving)
-            ball_x = paddle_x + dbx + paddle_width / 2;
-    }
-
     if (gameState == 0)
     {
 
@@ -456,6 +455,16 @@ void iMouseMove(int mx, int my)
         {
             selected_menu_idx = 1;
         }
+    }
+    if (gameState == 101)
+    {
+        if (mx < paddle_width / 2)
+            mx = paddle_width / 2;
+        if (mx > screen_width - paddle_width / 2)
+            mx = screen_width - paddle_width / 2;
+        paddle_x = mx - paddle_width / 2;
+        if (!isBallMoving)
+            ball_x = paddle_x + dbx + paddle_width / 2;
     }
     if (gameState == 100)
     {
@@ -523,7 +532,6 @@ function iMouse() is called when the user presses/releases the mouse.
 */
 void iMouse(int button, int state, int mx, int my)
 {
-    // Adjust for offset
     mx -= offset_x;
     my -= offset_y;
     if (gameState == 0)
@@ -997,10 +1005,10 @@ void resetGame(void)
     bgchk = 1;
     isGameOver = false;
     gameState = 101;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 15; i++)
         for (int j = 0; j < 15; j++)
             blockGrid[i][j] = 0;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
         {
@@ -1086,14 +1094,6 @@ void drawBlocks(void)
             }
         }
     }
-}
-
-void loadingScreen(void)
-{
-    iSetColor(255, 255, 255);
-    iText(450, 100, "Loading...", GLUT_BITMAP_HELVETICA_18);
-    Sleep(1000);
-    iClear();
 }
 
 void displayOptions(void)
@@ -1186,7 +1186,7 @@ void ballMotion(void)
     if (isLevelCleared())
     {
         level++;
-        loadNextLevel();
+        gameState = 7;
     }
 }
 void toggleFullscreen(void)
@@ -1230,11 +1230,6 @@ void toggleGameMusic()
         if (gamechannel != -1)
             iPauseSound(gamechannel);
     }
-}
-
-void loadFinished(void)
-{
-    loadingDone = true;
 }
 
 void loadScreen(int gamestate)
@@ -1305,7 +1300,6 @@ void checkCollision(void)
         }
     }
 }
-
 int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume)
 {
     if (*channelVar != -1 && Mix_Playing(*channelVar))
@@ -1324,7 +1318,7 @@ int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volu
 }
 bool isLevelCleared()
 {
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
         {
@@ -1343,10 +1337,7 @@ void loadNextLevel()
     loadingDone = false;
     iPauseTimer(0); // pause movement
     iPauseSound(gamechannel);
-
-    // Delay a bit and then load next level
-    Sleep(1000); // simulate loading time
-    resetGame(); // load level data and reset
+    resetGame();
     loadingDone = true;
     gameState = 101;
     iResumeTimer(0);
