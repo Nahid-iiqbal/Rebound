@@ -10,7 +10,7 @@ float dx;
 float dy;
 int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
 int chofmm, chofgame;
-float ball_spd = 8.0;
+float ball_spd = 10.0;
 int screen_width = 1000;
 int screen_height = 750;
 int paddle_width = 150;
@@ -55,33 +55,16 @@ char block_path[5][100] = {
     "assets/images/explode_block.png"};
 int levelGrid[5][15][15] = {
     {
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    },
-    {
-        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 1, 5, 1, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 1, 2, 5, 2, 1, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 1, 2, 2, 5, 2, 2, 1, 0, 0, 0, 0, 0},
-        {0, 0, 1, 2, 2, 2, 5, 2, 2, 2, 1, 0, 0, 0, 0},
-        {0, 0, 1, 2, 2, 2, 5, 2, 2, 2, 1, 0, 0, 0, 0},
-        {0, 0, 0, 1, 2, 2, 5, 2, 2, 1, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 1, 2, 5, 2, 1, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 1, 5, 1, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+        {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
+        {2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5},
+        {1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2},
+        {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
+        {2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5},
+        {1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2},
+        {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
+        {2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5},
+        {1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2},
+        {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -89,24 +72,37 @@ int levelGrid[5][15][15] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     },
     {
+        {5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 5},
+        {0, 5, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 5, 0},
+        {0, 0, 5, 0, 0, 1, 1, 2, 1, 1, 0, 0, 5, 0, 0},
+        {0, 0, 0, 5, 1, 1, 2, 2, 2, 1, 1, 5, 0, 0, 0},
+        {0, 0, 0, 1, 1, 2, 2, 3, 2, 2, 1, 1, 0, 0, 0},
+        {0, 0, 1, 1, 2, 2, 3, 3, 3, 2, 2, 1, 1, 0, 0},
+        {0, 1, 1, 2, 2, 3, 3, 4, 3, 3, 2, 2, 1, 1, 0},
+        {1, 1, 2, 2, 3, 3, 4, 4, 4, 3, 3, 2, 2, 1, 1},
+        {0, 1, 1, 2, 2, 3, 3, 4, 3, 3, 2, 2, 1, 1, 0},
+        {0, 0, 1, 1, 2, 2, 3, 3, 3, 2, 2, 1, 1, 0, 0},
+        {0, 0, 0, 1, 1, 2, 2, 3, 2, 2, 1, 1, 0, 0, 0},
+        {0, 0, 0, 5, 1, 1, 2, 2, 2, 1, 1, 5, 0, 0, 0},
+        {0, 0, 5, 0, 0, 1, 1, 2, 1, 1, 0, 0, 5, 0, 0},
+        {0, 5, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 5, 0},
+        {5, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 5},
+    },
+    {
         {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 5, 1, 2, 5, 2, 3, 5, 3, 1, 5, 1, 2, 5, 2},
         {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
-        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
-
         {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 5, 2, 3, 5, 3, 1, 5, 1, 2, 5, 2, 3, 5, 3},
         {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
-        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
-
         {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
+        {3, 5, 3, 1, 5, 1, 2, 5, 2, 3, 5, 3, 1, 5, 1},
         {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
-        {3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1},
-
         {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
+        {1, 5, 1, 2, 5, 2, 3, 5, 3, 1, 5, 1, 2, 5, 2},
         {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
-        {1, 1, 1, 2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2},
-
         {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
-        {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
+        {2, 5, 2, 3, 5, 3, 1, 5, 1, 2, 5, 2, 3, 5, 3},
         {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
     },
     {
@@ -178,7 +174,7 @@ void checkCollision(void);
 int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
 bool isLevelCleared();
 void loadNextLevel();
-void explode(int i, int j);
+void explode(int i, int j, bool playSound);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -1245,7 +1241,7 @@ void loadScreen(int gamestate)
 }
 void checkCollision(void)
 {
-    if (ball_y > 280)
+    if (ball_y > 50)
     {
         bool hit = false;
         for (int i = 0; i < 15 && !hit; i++)
@@ -1264,14 +1260,14 @@ void checkCollision(void)
                             ball_x -= dx;
                             ball_y -= dy;
                             dy *= (-1);
-                            if (blockGrid[i][j] < 4)
+                            if (blockGrid[i][j] == 5)
+                            {
+                                explode(i, j, true);
+                            }
+                            else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0)
                             {
                                 blockGrid[i][j] -= 1;
                                 score += 50;
-                            }
-                            if (blockGrid[i][j] == 5)
-                            {
-                                explode(i, j);
                             }
                             iPlaySound("assets/sounds/bounce.wav");
                             hit = true;
@@ -1285,7 +1281,11 @@ void checkCollision(void)
                             ball_x -= dx;
                             ball_y -= dy;
                             dx *= (-1);
-                            if (blockGrid[i][j] != 4)
+                            if (blockGrid[i][j] == 5)
+                            {
+                                explode(i, j, true);
+                            }
+                            else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0)
                             {
                                 blockGrid[i][j] -= 1;
                                 score += 50;
@@ -1310,7 +1310,7 @@ int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volu
     {
         if (*channelVar != -1)
         {
-            iStopSound(*channelVar); // Free previous chunk
+            iStopSound(*channelVar);
         }
         *channelVar = iPlaySound(filename, loop, volume);
     }
@@ -1331,11 +1331,11 @@ bool isLevelCleared()
 void loadNextLevel()
 {
     if (level >= 5)
-        level = 1; // wrap around or stop here if you want game over
+        level = 1;
 
-    gameState = 7; // 6 = loading state
+    gameState = 7;
     loadingDone = false;
-    iPauseTimer(0); // pause movement
+    iPauseTimer(0);
     iPauseSound(gamechannel);
     resetGame();
     loadingDone = true;
@@ -1344,32 +1344,34 @@ void loadNextLevel()
     bgchk = 1;
 }
 
-void explode(int i, int j)
+void explode(int i, int j, bool playSound = true)
 {
-    if (i < 0 || i >= 10 || j < 0 || j >= 15)
+    if (i < 0 || i >= 15 || j < 0 || j >= 15)
         return;
 
-    if (blockGrid[i][j] == 0 || blockGrid[i][j] == 4)
-        return; // Skip empty/unbreakable
+    if (blockGrid[i][j] == 0)
+        return;
 
-    if (blockGrid[i][j] == 5) // Exploding block
+    int type = blockGrid[i][j];
+    blockGrid[i][j] = 0;
+    score += 50;
+
+    if (type == 5)
     {
-        blockGrid[i][j] = 0;
-        score += 50;
-        for (int di = -1; di <= 1; di++)
+        for (int di = -2; di <= 2; di++)
         {
-            for (int dj = -1; dj <= 1; dj++)
+            for (int dj = -2; dj <= 2; dj++)
             {
                 int ni = i + di;
                 int nj = j + dj;
-                explode(ni, nj); // Recursive explosion
+                if (ni >= 0 && ni < 15 && nj >= 0 && nj < 15)
+                {
+                    if (blockGrid[ni][nj] != 0)
+                        explode(ni, nj, false);
+                }
             }
         }
     }
-    else
-    {
-        blockGrid[i][j] = 0;
-        score += 50;
-    }
-    iPlaySound("assets/sounds/explosion.mp3");
+    if (playSound)
+        iPlaySound("assets/sounds/explosion.mp3", false, 20);
 }
