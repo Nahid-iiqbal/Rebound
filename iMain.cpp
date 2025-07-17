@@ -37,7 +37,7 @@ int prevGameState = 0;
 bool isBallMoving = false;
 bool mm_sound_check = true;
 bool game_sound_check = true;
-int level = 1;
+int level = 5;
 bool loadingDone = false;
 int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
@@ -122,27 +122,38 @@ int levelGrid[5][15][15] = {
         {2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2},
         {3, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 1},
     },
-    {{},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {},
-     {}}};
+    {
+        {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    }};
+
 int blockGrid[15][15] = {0};
 
 // block1 col = 00ffb5, 004d37
 // block2 col = 00aaff, 00334d
 // block3 col = ff4800, 4d1600
-
+///////////////////////////////powerups//////////////////////////////////////////////
+typedef struct
+{
+    float x, y;
+    int type;
+    float height, width;
+    bool isActive;
+} pw;
+pw powerUps[30];
 /*
 gamestate:
 0 = main menu
@@ -175,6 +186,7 @@ int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volu
 bool isLevelCleared();
 void loadNextLevel();
 void explode(int i, int j, bool playSound);
+void activePower(int n);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -237,7 +249,12 @@ void iDraw()
     {
         iClear();
         iShowImage(0, 0, "assets/images/1.png");
-        iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
+        if (paddle_width == 150)
+            iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
+        else if (paddle_width == 80)
+            iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_small.png");
+        else if (paddle_width == 200)
+            iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_long.png");
         iSetColor(213, 105, 43);
         iFilledCircle(ball_x, ball_y, ball_radius);
         drawBlocks();
@@ -250,7 +267,7 @@ void iDraw()
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         char levelText[20];
         sprintf(levelText, "Level: %d", level);
-        iTextTTF(460, screen_height - 30, levelText, "assets/fonts/DancingScript-Medium.ttf", 30);
+        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
@@ -267,6 +284,38 @@ void iDraw()
             isGameOver = true;
             level = 1;
             gameState = 2;
+        }
+        for (int p = 0; p < 30; p++)
+        {
+            if (powerUps[p].isActive)
+            {
+                switch (powerUps[p].type)
+                {
+                case 1:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/life+.png");
+                    break;
+                case 2:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/spd--.png");
+                    break;
+                case 3:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/paddle_wide.png");
+                    break;
+                case 4:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/life-.png");
+                    break;
+                case 5:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/spd++.png");
+                    break;
+                case 6:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/paddle_small.png");
+                    break;
+                case 7:
+                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/gameover.png");
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
@@ -1001,6 +1050,8 @@ void resetGame(void)
     bgchk = 1;
     isGameOver = false;
     gameState = 101;
+    paddle_width = 150;
+    ball_spd = 10;
     for (int i = 0; i < 15; i++)
         for (int j = 0; j < 15; j++)
             blockGrid[i][j] = 0;
@@ -1010,6 +1061,11 @@ void resetGame(void)
         {
             blockGrid[i][j] = levelGrid[level - 1][i][j];
         }
+    }
+
+    for (int i = 0; i < 30; i++)
+    {
+        powerUps[i].isActive = false;
     }
 }
 
@@ -1147,17 +1203,23 @@ void ballMotion(void)
 
     if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
     {
-        dx *= (-1);
+        if (ball_x + ball_radius > screen_width)
+            ball_x = screen_width - ball_radius;
+        else if (ball_x - ball_radius < 0)
+            ball_x = ball_radius;
+        dx *= -1;
         iPlaySound("assets/sounds/bounce.wav");
     }
 
     if (ball_y + ball_radius > screen_height)
     {
+        if (ball_y + ball_radius > screen_height)
+            ball_y = screen_height - ball_radius;
         dy *= (-1);
         iPlaySound("assets/sounds/bounce.wav");
     }
 
-    if (dx != 0 && dy != 0 && ball_x >= paddle_x + dbx && ball_x <= paddle_x + paddle_width + dbx && ball_y - ball_radius <= paddle_height + paddle_y && ball_y - ball_radius >= paddle_y)
+    if (dx != 0 && dy != 0 && ball_x > paddle_x + dbx && ball_x < paddle_x + paddle_width + dbx && ball_y - ball_radius < paddle_height + paddle_y && ball_y - ball_radius > paddle_y)
     {
         score += 20;
         ball_y = paddle_y + paddle_height + ball_radius;
@@ -1169,6 +1231,7 @@ void ballMotion(void)
     if (ball_y < paddle_y)
     {
         lives--;
+        ball_spd = 10;
         iPlaySound("assets/sounds/lifelost.wav");
         dbx = 0;
         dx = 0;
@@ -1183,6 +1246,28 @@ void ballMotion(void)
     {
         level++;
         gameState = 7;
+    }
+
+    // power-ups
+    for (int k = 0; k < 30; k++)
+    {
+        if (powerUps[k].isActive)
+        {
+            powerUps[k].y -= 5;
+            // fall
+        }
+        if (powerUps[k].y < paddle_y)
+        {
+            powerUps[k].isActive = false;
+            // missed
+        }
+        if (((powerUps[k].x > paddle_x) && (powerUps[k].x < paddle_x + paddle_width)) && (powerUps[k].y < paddle_y + paddle_height))
+        {
+            powerUps[k].y = paddle_y + paddle_height + 3;
+            powerUps[k].isActive = false;
+            activePower(powerUps[k].type);
+            break;
+        }
     }
 }
 void toggleFullscreen(void)
@@ -1244,9 +1329,10 @@ void checkCollision(void)
     if (ball_y > 50)
     {
         bool hit = false;
-        for (int i = 0; i < 15 && !hit; i++)
+        int i, j;
+        for (i = 0; i < 15 && !hit; i++)
         {
-            for (int j = 0; j < 15 && !hit; j++)
+            for (j = 0; j < 15 && !hit; j++)
             {
                 if (blockGrid[i][j] > 0)
                 {
@@ -1255,10 +1341,16 @@ void checkCollision(void)
 
                     if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
                     {
-                        if ((ball_y + ball_radius >= block_y) && (ball_y - ball_radius <= block_y + block_height))
+                        if ((ball_y + ball_radius > block_y) && (ball_y - ball_radius < block_y + block_height))
                         {
-                            ball_x -= dx;
-                            ball_y -= dy;
+                            if (ball_y + ball_radius > block_y && !(ball_y - ball_radius < block_y + block_height))
+                            {
+                                ball_y = block_y - ball_radius - 2 * dy;
+                            }
+                            else if (ball_y - ball_radius <= block_y + block_height && !(ball_y + ball_radius >= block_y))
+                            {
+                                ball_y = block_y + block_height + ball_radius + 2 * dy;
+                            }
                             dy *= (-1);
                             if (blockGrid[i][j] == 5)
                             {
@@ -1274,12 +1366,18 @@ void checkCollision(void)
                             break;
                         }
                     }
-                    if ((ball_y >= block_y) && (ball_y <= block_y + block_height))
+                    else if ((ball_y > block_y) && (ball_y < block_y + block_height))
                     {
-                        if ((ball_x + ball_radius >= block_x) && (ball_x - ball_radius <= block_x + block_width))
+                        if ((ball_x + ball_radius > block_x) && (ball_x - ball_radius < block_x + block_width))
                         {
-                            ball_x -= dx;
-                            ball_y -= dy;
+                            if (ball_x + ball_radius > block_x && !(ball_x - ball_radius < block_x + block_width))
+                            {
+                                ball_x = block_x - ball_radius - 2 * dx;
+                            }
+                            else if (ball_x - ball_radius < block_x + block_width && !(ball_x + ball_radius > block_x))
+                            {
+                                ball_x = block_x + block_width + ball_radius + 2 * dx;
+                            }
                             dx *= (-1);
                             if (blockGrid[i][j] == 5)
                             {
@@ -1295,6 +1393,20 @@ void checkCollision(void)
                             break;
                         }
                     }
+                }
+            }
+        }
+        if (rand() % 100 < 30 && isBallMoving)
+        {
+            for (int k = 0; k < 30; k++)
+            {
+                if (!powerUps[k].isActive)
+                {
+                    powerUps[k].isActive = true;
+                    powerUps[k].x = j * block_width + block_width / 2;
+                    powerUps[k].y = screen_height - (i + 1) * block_height;
+                    powerUps[k].type = rand() % 7 + 1;
+                    break;
                 }
             }
         }
@@ -1322,7 +1434,7 @@ bool isLevelCleared()
     {
         for (int j = 0; j < 15; j++)
         {
-            if (blockGrid[i][j] != 0)
+            if (blockGrid[i][j] != 0 && blockGrid[i][j] != 4)
                 return false;
         }
     }
@@ -1358,9 +1470,9 @@ void explode(int i, int j, bool playSound = true)
 
     if (type == 5)
     {
-        for (int di = -2; di <= 2; di++)
+        for (int di = -1; di <= 1; di++)
         {
-            for (int dj = -2; dj <= 2; dj++)
+            for (int dj = -1; dj <= 1; dj++)
             {
                 int ni = i + di;
                 int nj = j + dj;
@@ -1374,4 +1486,44 @@ void explode(int i, int j, bool playSound = true)
     }
     if (playSound)
         iPlaySound("assets/sounds/explosion.mp3", false, 20);
+}
+void activePower(int n)
+{
+    switch (n)
+    {
+    case 1: // life
+        iPlaySound("assets/sounds/powerup.mp3");
+        if (lives < 5)
+            lives++;
+        break;
+    case 2: // speed slow
+        iPlaySound("assets/sounds/powerup.mp3");
+        ball_spd = 8;
+        break;
+    case 3: // paddle size increase
+        iPlaySound("assets/sounds/powerup.mp3");
+        paddle_width = 200;
+        break;
+    case 4: // life decrease
+        iPlaySound("assets/sounds/powerdown.wav");
+        lives--;
+        break;
+    case 5: // speed increase
+        iPlaySound("assets/sounds/powerdown.wav");
+        ball_spd = 15;
+        break;
+    case 6: // paddle size decrease
+        iPlaySound("assets/sounds/powerdown.wav");
+        paddle_width = 80;
+        break;
+    case 7: // game over
+        iPlaySound("assets/sounds/powerdown.wav");
+        iPlaySound("assets/sounds/mus_gameover.wav", false);
+        isGameOver = true;
+        level = 1;
+        gameState = 2;
+        break;
+    default:
+        break;
+    }
 }
