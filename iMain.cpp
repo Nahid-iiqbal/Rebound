@@ -1404,135 +1404,55 @@ void loadScreen(int gamestate)
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
 
-
-// void checkCollision(void)
-// {
-//     if (ball_y > 50)
-//     {
-//         bool hit = false;
-//         int i, j;
-//         for (i = 0; i < 15 && !hit; i++)
-//         {
-//             for (j = 0; j < 15 && !hit; j++)
-//             {
-//                 if (blockGrid[i][j] > 0)
-//                 {
-//                     int block_x = j * block_width;
-//                     int block_y = screen_height - (i + 1) * block_height - 70;
-
-//                     if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
-//                     {
-//                         if ((ball_y + ball_radius > block_y) && (ball_y - ball_radius < block_y + block_height))
-//                         {
-//                             if (ball_y + ball_radius > block_y && !(ball_y - ball_radius < block_y + block_height))
-//                             {
-//                                 ball_y = block_y - ball_radius - 2 * dy;
-//                             }
-//                             else if (ball_y - ball_radius <= block_y + block_height && !(ball_y + ball_radius >= block_y))
-//                             {
-//                                 ball_y = block_y + block_height + ball_radius + 2 * dy;
-//                             }
-//                             dy *= (-1);
-//                             if (blockGrid[i][j] == 5)
-//                             {
-//                                 explode(i, j, true);
-//                             }
-//                             else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0)
-//                             {
-//                                 blockGrid[i][j] -= 1;
-//                                 score += 50;
-//                             }
-//                             iPlaySound("assets/sounds/bounce.wav");
-//                             hit = true;
-//                             break;
-//                         }
-//                     }
-//                     else if ((ball_y > block_y) && (ball_y < block_y + block_height))
-//                     {
-//                         if ((ball_x + ball_radius > block_x) && (ball_x - ball_radius < block_x + block_width))
-//                         {
-//                             if (ball_x + ball_radius > block_x && !(ball_x - ball_radius < block_x + block_width))
-//                             {
-//                                 ball_x = block_x - ball_radius - 2 * dx;
-//                             }
-//                             else if (ball_x - ball_radius < block_x + block_width && !(ball_x + ball_radius > block_x))
-//                             {
-//                                 ball_x = block_x + block_width + ball_radius + 2 * dx;
-//                             }
-//                             dx *= (-1);
-//                             if (blockGrid[i][j] == 5)
-//                             {
-//                                 explode(i, j, true);
-//                             }
-//                             else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0)
-//                             {
-//                                 blockGrid[i][j] -= 1;
-//                                 score += 50;
-//                             }
-//                             iPlaySound("assets/sounds/bounce.wav");
-//                             hit = true;
-//                             break;
-//                         }
-//                     }
-//                 }
-//             }
-//         }
-//         if (rand() % 100 < 30 && isBallMoving)
-//         {
-//             for (int k = 0; k < 30; k++)
-//             {
-//                 if (!powerUps[k].isActive)
-//                 {
-//                     powerUps[k].isActive = true;
-//                     powerUps[k].x = j * block_width + block_width / 2;
-//                     powerUps[k].y = screen_height - (i + 1) * block_height;
-//                     powerUps[k].type = rand() % 7 + 1;
-//                     break;
-//                 }
-//             }
-//         }
-//     }
-// }
-
-
-
 // Grok Code:
 
-void checkCollision(void) {
-    if (ball_y <= 50) return; // Skip collision check if ball is too low
+void checkCollision(int ballIdx)
+{
+    if (balls[ballIdx].y <= 50)
+        return; // Skip collision check if ball is too low
 
     bool hit = false;
-    for (int i = 0; i < 15; i++) {
-        for (int j = 0; j < 15; j++) {
-            if (blockGrid[i][j] > 0) {
+    for (int i = 0; i < 15; i++)
+    {
+        for (int j = 0; j < 15; j++)
+        {
+            if (blockGrid[i][j] > 0)
+            {
                 int block_x = j * block_width;
                 int block_y = screen_height - (i + 1) * block_height - 70;
 
                 // Find closest point on block to ball's center
-                double closest_x = fmax(block_x, fmin(ball_x, block_x + block_width));
-                double closest_y = fmax(block_y, fmin(ball_y, block_y + block_height));
-                double distance = sqrt(pow(ball_x - closest_x, 2) + pow(ball_y - closest_y, 2));
+                double closest_x = fmax(block_x, fmin(balls[ballIdx].x, block_x + block_width));
+                double closest_y = fmax(block_y, fmin(balls[ballIdx].y, block_y + block_height));
+                double distance = sqrt(pow(balls[ballIdx].x - closest_x, 2) + pow(balls[ballIdx].y - closest_y, 2));
 
-                if (distance < ball_radius) {
+                if (distance < ball_radius)
+                {
                     // Determine collision side
-                    double dx_left = ball_x - block_x;
-                    double dx_right = (block_x + block_width) - ball_x;
-                    double dy_top = (block_y + block_height) - ball_y;
-                    double dy_bottom = ball_y - block_y;
+                    double dx_left = balls[ballIdx].x - block_x;
+                    double dx_right = (block_x + block_width) - balls[ballIdx].x;
+                    double dy_top = (block_y + block_height) - balls[ballIdx].y;
+                    double dy_bottom = balls[ballIdx].y - block_y;
                     double min_distance = fmin(fmin(dx_left, dx_right), fmin(dy_top, dy_bottom));
 
-                    if (min_distance == dx_left || min_distance == dx_right) {
-                        dx = -dx; // Horizontal bounce
-                        ball_x = (min_distance == dx_left) ? block_x - ball_radius : block_x + block_width + ball_radius;
-                    } else {
-                        dy = -dy; // Vertical bounce
-                        ball_y = (min_distance == dy_top) ? block_y + block_height + ball_radius : block_y - ball_radius;
+                    if (min_distance == dx_left || min_distance == dx_right)
+                    {
+                        balls[ballIdx].dx = -balls[ballIdx].dx; // Horizontal bounce
+                        balls[ballIdx].x = (min_distance == dx_left) ? block_x - ball_radius : block_x + block_width + ball_radius;
+                    }
+                    else
+                    {
+                        balls[ballIdx].dy = -balls[ballIdx].dy; // Vertical bounce
+                        balls[ballIdx].y = (min_distance == dy_top) ? block_y + block_height + ball_radius : block_y - ball_radius;
                     }
 
                     // Update block and score
-                    if (blockGrid[i][j] == 5) {
+                    if (blockGrid[i][j] == 5)
+                    {
                         explode(i, j, true);
-                    } else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0) {
+                    }
+                    else if (blockGrid[i][j] < 4 && blockGrid[i][j] > 0)
+                    {
                         blockGrid[i][j] -= 1;
                         score += 50;
                     }
@@ -1549,7 +1469,7 @@ void checkCollision(void) {
                                 powerUps[k].isActive = true;
                                 powerUps[k].x = j * block_width + block_width / 2;
                                 powerUps[k].y = screen_height - (i + 1) * block_height;
-                                powerUps[k].type = rand() % 7 + 1;
+                                powerUps[k].type = rand() % 8 + 1; // Updated to include multi-ball (type 8)
                                 break;
                             }
                         }
@@ -1724,7 +1644,6 @@ void activePower(int n)
         break;
     }
 }
-
 
 void setup()
 {
