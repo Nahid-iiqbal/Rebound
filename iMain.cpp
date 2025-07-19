@@ -6,8 +6,6 @@
 #include "iSound.h"
 // variables///////////////////////////////////////////////////////////
 float pi = 3.14159;
-float dx;
-float dy;
 int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
 int chofmm, chofgame;
 float ball_spd = 10.0;
@@ -20,9 +18,19 @@ int paddle_y = 15;
 int ball_radius = 10;
 int lives = 3;
 int score = 0;
-float ball_x = paddle_x + paddle_width / 2;
-float ball_y = paddle_height + paddle_y + ball_radius;
 int dbx = 0;
+
+// Multiple balls system
+#define MAX_BALLS 5
+typedef struct
+{
+    float x, y;
+    float dx, dy;
+    bool isActive;
+} Ball;
+
+Ball balls[MAX_BALLS];
+int activeBalls = 1;
 bool isGameOver = false;
 bool isFullscreen = false;
 int offset_x = 0, offset_y = 0;
@@ -181,7 +189,7 @@ void toggleFullscreen(void);
 void toggleMenuMusic(void);
 void toggleGameMusic(void);
 void loadScreen(int gamestate);
-void checkCollision(void);
+void checkCollision(int ballIdx);
 int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
 bool isLevelCleared();
 void loadNextLevel();
@@ -256,7 +264,13 @@ void iDraw()
         else if (paddle_width == 200)
             iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle_long.png");
         iSetColor(213, 105, 43);
-        iFilledCircle(ball_x, ball_y, ball_radius);
+        for (int i = 0; i < MAX_BALLS; i++)
+        {
+            if (balls[i].isActive)
+            {
+                iFilledCircle(balls[i].x, balls[i].y, ball_radius);
+            }
+        }
         drawBlocks();
         iSetColor(255, 0, 0);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
@@ -280,7 +294,7 @@ void iDraw()
 
         if (lives < 1 && !isGameOver)
         {
-            iPlaySound("assets/sounds/mus_gameover.wav", false);
+            iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
             isGameOver = true;
             level = 1;
             gameState = 2;
@@ -289,28 +303,35 @@ void iDraw()
         {
             if (powerUps[p].isActive)
             {
+                // Apply offset for fullscreen mode
+                int draw_x = powerUps[p].x;
+                int draw_y = powerUps[p].y;
+
                 switch (powerUps[p].type)
                 {
                 case 1:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/life+.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/life+.png");
                     break;
                 case 2:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/spd--.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/spd--.png");
                     break;
                 case 3:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/paddle_wide.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/paddle_wide.png");
                     break;
                 case 4:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/life-.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/life-.png");
                     break;
                 case 5:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/spd++.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/spd++.png");
                     break;
                 case 6:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/paddle_small.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/paddle_small.png");
                     break;
                 case 7:
-                    iShowImage(powerUps[p].x, powerUps[p].y, "assets/images/powerups/gameover.png");
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/gameover.png");
+                    break;
+                case 8:
+                    iShowImage(draw_x, draw_y, "assets/images/powerups/ballmulti.png");
                     break;
                 default:
                     break;
@@ -509,7 +530,7 @@ void iMouseMove(int mx, int my)
             mx = screen_width - paddle_width / 2;
         paddle_x = mx - paddle_width / 2;
         if (!isBallMoving)
-            ball_x = paddle_x + dbx + paddle_width / 2;
+            balls[0].x = paddle_x + dbx + paddle_width / 2;
     }
     if (gameState == 100)
     {
@@ -841,7 +862,7 @@ void iKeyboard(unsigned char key)
             if (paddle_x > screen_width - paddle_width)
                 paddle_x = screen_width - paddle_width;
             if (!isBallMoving)
-                ball_x = paddle_x + paddle_width / 2;
+                balls[0].x = paddle_x + paddle_width / 2;
             break;
         case 'a':
         case 'A':
@@ -849,14 +870,14 @@ void iKeyboard(unsigned char key)
             if (paddle_x < 0)
                 paddle_x = 0;
             if (!isBallMoving)
-                ball_x = paddle_x + paddle_width / 2;
+                balls[0].x = paddle_x + paddle_width / 2;
             break;
         case ' ':
         {
             if (!isBallMoving)
             {
-                dx = ball_spd * cos(pi / 4);
-                dy = ball_spd * sin(pi / 4);
+                balls[0].dx = ball_spd * cos(pi / 4);
+                balls[0].dy = ball_spd * sin(pi / 4);
                 isBallMoving = true;
             }
             break;
@@ -1039,12 +1060,8 @@ int main(int argc, char *argv[])
 
 void resetGame(void)
 {
-    dx = 0;
-    dy = 0;
     dbx = 0;
     isBallMoving = false;
-    ball_x = paddle_x + dbx + paddle_width / 2;
-    ball_y = paddle_height + paddle_y + ball_radius;
     lives = 3;
     score = 0;
     bgchk = 1;
@@ -1052,6 +1069,22 @@ void resetGame(void)
     gameState = 101;
     paddle_width = 150;
     ball_spd = 10;
+
+    // Initialize balls
+    activeBalls = 1;
+    for (int i = 0; i < MAX_BALLS; i++)
+    {
+        balls[i].isActive = false;
+        balls[i].dx = 0;
+        balls[i].dy = 0;
+    }
+
+    // Initialize first ball
+    balls[0].isActive = true;
+    balls[0].x = paddle_x + dbx + paddle_width / 2;
+    balls[0].y = paddle_height + paddle_y + ball_radius;
+    balls[0].dx = 0;
+    balls[0].dy = 0;
     for (int i = 0; i < 15; i++)
         for (int j = 0; j < 15; j++)
             blockGrid[i][j] = 0;
@@ -1190,56 +1223,100 @@ void displayHighscore(void)
 }
 void ballMotion(void)
 {
-    checkCollision();
-    if (!isBallMoving || gameState != 101)
+    if (gameState != 101)
     {
         return;
     }
 
-    ball_x += dx;
-    ball_y += dy;
-    float position = ((paddle_x + dbx + paddle_width / 2) - ball_x) / (paddle_width / 2);
-    float angle = (pi / 2) + position * (pi / 3);
-
-    if (ball_x + ball_radius > screen_width || ball_x - ball_radius < 0)
+    for (int ballIdx = 0; ballIdx < MAX_BALLS; ballIdx++)
     {
-        if (ball_x + ball_radius > screen_width)
-            ball_x = screen_width - ball_radius;
-        else if (ball_x - ball_radius < 0)
-            ball_x = ball_radius;
-        dx *= -1;
-        iPlaySound("assets/sounds/bounce.wav");
-    }
+        if (!balls[ballIdx].isActive)
+            continue;
 
-    if (ball_y + ball_radius > screen_height)
-    {
-        if (ball_y + ball_radius > screen_height)
-            ball_y = screen_height - ball_radius;
-        dy *= (-1);
-        iPlaySound("assets/sounds/bounce.wav");
-    }
+        if (!isBallMoving)
+        {
+            balls[ballIdx].x = paddle_x + dbx + paddle_width / 2;
+            balls[ballIdx].y = paddle_height + paddle_y + ball_radius;
+            continue;
+        }
 
-    if (dx != 0 && dy != 0 && ball_x > paddle_x + dbx && ball_x < paddle_x + paddle_width + dbx && ball_y - ball_radius < paddle_height + paddle_y && ball_y - ball_radius > paddle_y)
-    {
-        score += 20;
-        ball_y = paddle_y + paddle_height + ball_radius;
-        if (dx != 0 && dy != 0)
-            iPlaySound("assets/sounds/bounce.wav");
-        dx = ball_spd * cos(angle);
-        dy = ball_spd * sin(angle);
-    }
-    if (ball_y < paddle_y)
-    {
-        lives--;
-        ball_spd = 10;
-        iPlaySound("assets/sounds/lifelost.wav");
-        dbx = 0;
-        dx = 0;
-        dy = 0;
+        balls[ballIdx].x += balls[ballIdx].dx;
+        balls[ballIdx].y += balls[ballIdx].dy;
 
-        isBallMoving = false;
-        ball_x = paddle_x + dbx + paddle_width / 2;
-        ball_y = paddle_height + paddle_y + ball_radius;
+        // Check collision with blocks
+        checkCollision(ballIdx);
+
+        // Wall collisions
+        if (balls[ballIdx].x + ball_radius > screen_width || balls[ballIdx].x - ball_radius < 0)
+        {
+            if (balls[ballIdx].x + ball_radius > screen_width)
+                balls[ballIdx].x = screen_width - ball_radius;
+            else if (balls[ballIdx].x - ball_radius < 0)
+                balls[ballIdx].x = ball_radius;
+            balls[ballIdx].dx *= -1;
+            iPlaySound("assets/sounds/bounce.wav", false, 30);
+        }
+
+        if (balls[ballIdx].y + ball_radius > screen_height)
+        {
+            if (balls[ballIdx].y + ball_radius > screen_height)
+                balls[ballIdx].y = screen_height - ball_radius;
+            balls[ballIdx].dy *= (-1);
+            iPlaySound("assets/sounds/bounce.wav", false, 30);
+        }
+
+        // Paddle collision
+        if (balls[ballIdx].dx != 0 && balls[ballIdx].dy != 0 &&
+            balls[ballIdx].x > paddle_x + dbx && balls[ballIdx].x < paddle_x + paddle_width + dbx &&
+            balls[ballIdx].y - ball_radius < paddle_height + paddle_y && balls[ballIdx].y - ball_radius > paddle_y)
+        {
+            score += 20;
+            balls[ballIdx].y = paddle_y + paddle_height + ball_radius;
+            float position = ((paddle_x + dbx + paddle_width / 2) - balls[ballIdx].x) / (paddle_width / 2);
+            float angle = (pi / 2) + position * (pi / 3);
+            if (balls[ballIdx].dx != 0 && balls[ballIdx].dy != 0)
+                iPlaySound("assets/sounds/bounce.wav", false, 30);
+            balls[ballIdx].dx = ball_spd * cos(angle);
+            balls[ballIdx].dy = ball_spd * sin(angle);
+        }
+
+        // Ball out of bounds (below paddle)
+        if (balls[ballIdx].y < paddle_y)
+        {
+            balls[ballIdx].isActive = false;
+            activeBalls--;
+
+            // If no balls left
+            if (activeBalls == 0)
+            {
+                lives--;
+                ball_spd = 10;
+                iPlaySound("assets/sounds/lifelost.wav");
+                dbx = 0;
+
+                if (lives <= 0)
+                {
+                    isGameOver = true;
+                    gameState = 2;
+                    iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
+                }
+                else
+                {
+                    isBallMoving = false;
+                    activeBalls = 1;
+                    balls[0].isActive = true;
+                    balls[0].x = paddle_x + dbx + paddle_width / 2;
+                    balls[0].y = paddle_height + paddle_y + ball_radius;
+                    balls[0].dx = 0;
+                    balls[0].dy = 0;
+                    // Deactivate other balls
+                    for (int i = 1; i < MAX_BALLS; i++)
+                    {
+                        balls[i].isActive = false;
+                    }
+                }
+            }
+        }
     }
 
     if (isLevelCleared())
@@ -1254,19 +1331,17 @@ void ballMotion(void)
         if (powerUps[k].isActive)
         {
             powerUps[k].y -= 5;
-            // fall
-        }
-        if (powerUps[k].y < paddle_y)
-        {
-            powerUps[k].isActive = false;
-            // missed
-        }
-        if (((powerUps[k].x > paddle_x) && (powerUps[k].x < paddle_x + paddle_width)) && (powerUps[k].y < paddle_y + paddle_height))
-        {
-            powerUps[k].y = paddle_y + paddle_height + 3;
-            powerUps[k].isActive = false;
-            activePower(powerUps[k].type);
-            break;
+            if (((powerUps[k].x > paddle_x + dbx) && (powerUps[k].x < paddle_x + dbx + paddle_width)) &&
+                (powerUps[k].y <= paddle_y + paddle_height) && (powerUps[k].y >= paddle_y))
+            {
+                // Power-up caught by paddle
+                activePower(powerUps[k].type);
+                powerUps[k].isActive = false;
+            }
+            else if (powerUps[k].y < paddle_y - 10)
+            {
+                powerUps[k].isActive = false;
+            }
         }
     }
 }
@@ -1324,9 +1399,9 @@ void loadScreen(int gamestate)
     iTextTTF(600, 100, scoreText, "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
-void checkCollision(void)
+void checkCollision(int ballIdx)
 {
-    if (ball_y > 50)
+    if (balls[ballIdx].y > 50)
     {
         bool hit = false;
         int i, j;
@@ -1339,19 +1414,19 @@ void checkCollision(void)
                     int block_x = j * block_width;
                     int block_y = screen_height - (i + 1) * block_height - 70;
 
-                    if ((ball_x >= block_x) && (ball_x <= block_x + block_width))
+                    if ((balls[ballIdx].x >= block_x) && (balls[ballIdx].x <= block_x + block_width))
                     {
-                        if ((ball_y + ball_radius > block_y) && (ball_y - ball_radius < block_y + block_height))
+                        if ((balls[ballIdx].y + ball_radius > block_y) && (balls[ballIdx].y - ball_radius < block_y + block_height))
                         {
-                            if (ball_y + ball_radius > block_y && !(ball_y - ball_radius < block_y + block_height))
+                            if (balls[ballIdx].y + ball_radius > block_y && !(balls[ballIdx].y - ball_radius < block_y + block_height))
                             {
-                                ball_y = block_y - ball_radius - 2 * dy;
+                                balls[ballIdx].y = block_y - ball_radius - 2 * balls[ballIdx].dy;
                             }
-                            else if (ball_y - ball_radius <= block_y + block_height && !(ball_y + ball_radius >= block_y))
+                            else if (balls[ballIdx].y - ball_radius <= block_y + block_height && !(balls[ballIdx].y + ball_radius >= block_y))
                             {
-                                ball_y = block_y + block_height + ball_radius + 2 * dy;
+                                balls[ballIdx].y = block_y + block_height + ball_radius + 2 * balls[ballIdx].dy;
                             }
-                            dy *= (-1);
+                            balls[ballIdx].dy *= (-1);
                             if (blockGrid[i][j] == 5)
                             {
                                 explode(i, j, true);
@@ -1361,24 +1436,24 @@ void checkCollision(void)
                                 blockGrid[i][j] -= 1;
                                 score += 50;
                             }
-                            iPlaySound("assets/sounds/bounce.wav");
+                            iPlaySound("assets/sounds/bounce.wav", false, 30);
                             hit = true;
                             break;
                         }
                     }
-                    else if ((ball_y > block_y) && (ball_y < block_y + block_height))
+                    else if ((balls[ballIdx].y > block_y) && (balls[ballIdx].y < block_y + block_height))
                     {
-                        if ((ball_x + ball_radius > block_x) && (ball_x - ball_radius < block_x + block_width))
+                        if ((balls[ballIdx].x + ball_radius > block_x) && (balls[ballIdx].x - ball_radius < block_x + block_width))
                         {
-                            if (ball_x + ball_radius > block_x && !(ball_x - ball_radius < block_x + block_width))
+                            if (balls[ballIdx].x + ball_radius > block_x && !(balls[ballIdx].x - ball_radius < block_x + block_width))
                             {
-                                ball_x = block_x - ball_radius - 2 * dx;
+                                balls[ballIdx].x = block_x - ball_radius - 2 * balls[ballIdx].dx;
                             }
-                            else if (ball_x - ball_radius < block_x + block_width && !(ball_x + ball_radius > block_x))
+                            else if (balls[ballIdx].x - ball_radius < block_x + block_width && !(balls[ballIdx].x + ball_radius > block_x))
                             {
-                                ball_x = block_x + block_width + ball_radius + 2 * dx;
+                                balls[ballIdx].x = block_x + block_width + ball_radius + 2 * balls[ballIdx].dx;
                             }
-                            dx *= (-1);
+                            balls[ballIdx].dx *= (-1);
                             if (blockGrid[i][j] == 5)
                             {
                                 explode(i, j, true);
@@ -1388,7 +1463,7 @@ void checkCollision(void)
                                 blockGrid[i][j] -= 1;
                                 score += 50;
                             }
-                            iPlaySound("assets/sounds/bounce.wav");
+                            iPlaySound("assets/sounds/bounce.wav", false, 30);
                             hit = true;
                             break;
                         }
@@ -1405,7 +1480,7 @@ void checkCollision(void)
                     powerUps[k].isActive = true;
                     powerUps[k].x = j * block_width + block_width / 2;
                     powerUps[k].y = screen_height - (i + 1) * block_height;
-                    powerUps[k].type = rand() % 7 + 1;
+                    powerUps[k].type = rand() % 8 + 1; // Updated to include multi-ball (type 8)
                     break;
                 }
             }
@@ -1492,37 +1567,86 @@ void activePower(int n)
     switch (n)
     {
     case 1: // life
-        iPlaySound("assets/sounds/powerup.mp3");
+        iPlaySound("assets/sounds/powerup.mp3", false, 30);
         if (lives < 5)
             lives++;
         break;
     case 2: // speed slow
-        iPlaySound("assets/sounds/powerup.mp3");
+        iPlaySound("assets/sounds/powerup.mp3", false, 30);
         ball_spd = 8;
         break;
     case 3: // paddle size increase
-        iPlaySound("assets/sounds/powerup.mp3");
+        iPlaySound("assets/sounds/powerup.mp3", false, 30);
         paddle_width = 200;
         break;
     case 4: // life decrease
-        iPlaySound("assets/sounds/powerdown.wav");
+        iPlaySound("assets/sounds/powerdown.wav", false, 30);
         lives--;
         break;
     case 5: // speed increase
-        iPlaySound("assets/sounds/powerdown.wav");
+        iPlaySound("assets/sounds/powerdown.wav", false, 30);
         ball_spd = 15;
         break;
     case 6: // paddle size decrease
-        iPlaySound("assets/sounds/powerdown.wav");
+        iPlaySound("assets/sounds/powerdown.wav", false, 30);
         paddle_width = 80;
         break;
     case 7: // game over
-        iPlaySound("assets/sounds/powerdown.wav");
-        iPlaySound("assets/sounds/mus_gameover.wav", false);
+        iPlaySound("assets/sounds/powerdown.wav", false, 30);
+        iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
         isGameOver = true;
         level = 1;
         gameState = 2;
         break;
+    case 8: // multi-ball
+    {
+        iPlaySound("assets/sounds/powerup.mp3", false, 30);
+
+        // Find all active balls to spawn from
+        int activeBallIndices[MAX_BALLS];
+        int activeBallCount = 0;
+        for (int j = 0; j < MAX_BALLS; j++)
+        {
+            if (balls[j].isActive)
+            {
+                activeBallIndices[activeBallCount] = j;
+                activeBallCount++;
+            }
+        }
+
+        // Spawn 1-2 new balls from each active ball
+        for (int sourceIdx = 0; sourceIdx < activeBallCount; sourceIdx++)
+        {
+            for (int spawn = 0; spawn < 2; spawn++)
+            {
+                // Find next available slot
+                for (int i = 0; i < MAX_BALLS; i++)
+                {
+                    if (!balls[i].isActive && activeBalls < MAX_BALLS)
+                    {
+                        int sourceBallIdx = activeBallIndices[sourceIdx];
+
+                        balls[i].isActive = true;
+                        balls[i].x = balls[sourceBallIdx].x; // Spawn from current active ball
+                        balls[i].y = balls[sourceBallIdx].y;
+
+                        // Generate different angle for each spawn from same source
+                        double baseAngle = (rand() % 120 + 30) * pi / 180; // 30-150 degrees
+                        double angleOffset = spawn * pi / 6;               // Offset for multiple spawns from same ball
+                        double angle = baseAngle + angleOffset;
+                        if (rand() % 2 == 0)
+                            angle = pi - angle; // Mirror for variety
+
+                        balls[i].dx = ball_spd * cos(angle);
+                        balls[i].dy = ball_spd * sin(angle);
+                        activeBalls++;
+                        break; // Found slot, move to next spawn
+                    }
+                }
+            }
+        }
+        break;
+    }
     default:
         break;
     }
