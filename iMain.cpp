@@ -56,7 +56,7 @@ Image ballImg, blockImgs[5];
 
 /// block variables///
 
-float block_width = 1000.0 / 15;
+float block_width = 65;
 float block_height = 30;
 int block_padding = 3;
 
@@ -449,7 +449,8 @@ void iDraw()
     }
     else if (gameState == 5)
     {
-        // displayHelp();
+        iShowImage(0, 0, "assets/images/background2.jpg");
+        iShowImage(100, 50, "assets/images/help.png");
     }
 
     else if (gameState == 6)
@@ -1137,49 +1138,34 @@ void drawBlocks(void)
     {
         for (int j = 0; j < 15; j++)
         {
-            if (blockGrid[i][j] == 1)
+            if (blockGrid[i][j] > 0 && blockGrid[i][j] <= 5)
             {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(0, 77, 55);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(0, 255, 181);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
+                int block_x = 13 + j * block_width;
+                int block_y = screen_height - (i + 1) * block_height - 70;
 
-            else if (blockGrid[i][j] == 2)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(0, 51, 77);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(0, 170, 255);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-            else if (blockGrid[i][j] == 3)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(77, 22, 0);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(255, 72, 0);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-            else if (blockGrid[i][j] == 4)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
-                iSetColor(128, 128, 128);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(192, 192, 192);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-            }
-            else if (blockGrid[i][j] == 5)
-            {
-                // iShowImage(j * block_width, screen_height - (i + 1) * block_height, block_path[blockGrid[i][j] - 1]);
+                switch (blockGrid[i][j])
+                {
+                case 1:
+                    iShowImage(block_x, block_y, "assets/images/blocks/1.png");
 
-                iSetColor(0, 0, 0);
-                iFilledRectangle(j * block_width, screen_height - (i + 1) * block_height - 70, block_width, block_height);
-                iSetColor(255, 0, 0);
-                iFilledRectangle(j * block_width + block_padding, screen_height - (i + 1) * block_height + block_padding - 70, block_width - 2 * block_padding, block_height - 2 * block_padding);
-                iSetColor(255, 0, 255);
-                iFilledRectangle(j * block_width + 40.0 / 3, screen_height - (i + 1) * block_height + 10 - 70, block_width - 2 * 40.0 / 3, block_height - 2 * 10);
+                    break; // Bright Green
+                case 2:
+                    iShowImage(block_x, block_y, "assets/images/blocks/2.png");
+
+                    break; // Bright Blue
+                case 3:
+                    iShowImage(block_x, block_y, "assets/images/blocks/3.png");
+
+                    break; // Orange
+                case 4:
+                    iShowImage(block_x, block_y, "assets/images/blocks/4.png");
+
+                    break; // Light Gray
+                case 5:
+                    iShowImage(block_x, block_y, "assets/images/blocks/5.png");
+
+                    break; // Bright Red (explosive)
+                }
             }
         }
     }
@@ -1239,8 +1225,12 @@ void ballMotion(void)
 
         if (!isBallMoving)
         {
-            balls[ballIdx].x = paddle_x + dbx + paddle_width / 2;
-            balls[ballIdx].y = paddle_height + paddle_y + ball_radius;
+            // Only position the first ball at paddle when not moving
+            if (ballIdx == 0)
+            {
+                balls[ballIdx].x = paddle_x + dbx + paddle_width / 2;
+                balls[ballIdx].y = paddle_height + paddle_y + ball_radius;
+            }
             continue;
         }
 
@@ -1295,7 +1285,7 @@ void ballMotion(void)
             {
                 lives--;
                 ball_spd = 10;
-                iPlaySound("assets/sounds/lifelost.wav");
+                iPlaySound("assets/sounds/lifelost.wav", false, 50);
                 dbx = 0;
 
                 if (lives <= 0)
@@ -1411,10 +1401,10 @@ void checkCollision(int ballIdx)
     if (balls[ballIdx].y <= 50)
         return; // Skip collision check if ball is too low
 
-    bool hit = false;
-    for (int i = 0; i < 15; i++)
+    int i, j;
+    for (i = 0; i < 15; i++)
     {
-        for (int j = 0; j < 15; j++)
+        for (j = 0; j < 15; j++)
         {
             if (blockGrid[i][j] > 0)
             {
@@ -1456,8 +1446,7 @@ void checkCollision(int ballIdx)
                         blockGrid[i][j] -= 1;
                         score += 50;
                     }
-                    iPlaySound("assets/sounds/bounce.wav");
-                    hit = true;
+                    iPlaySound("assets/sounds/bounce.wav", false, 30);
 
                     // Spawn power-up (30% chance)
                     if (rand() % 100 < 30 && isBallMoving)
@@ -1585,7 +1574,7 @@ void activePower(int n)
         paddle_width = 80;
         break;
     case 7: // game over
-        iPlaySound("assets/sounds/powerdown.wav", false, 30);
+        iPlaySound("assets/sounds/powerdown.wav", false);
         iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
         isGameOver = true;
         level = 1;
@@ -1607,34 +1596,29 @@ void activePower(int n)
             }
         }
 
-        // Spawn 1-2 new balls from each active ball
+        // Spawn 1 new ball from each active ball
         for (int sourceIdx = 0; sourceIdx < activeBallCount; sourceIdx++)
         {
-            for (int spawn = 0; spawn < 2; spawn++)
+            // Find next available slot
+            for (int i = 0; i < MAX_BALLS; i++)
             {
-                // Find next available slot
-                for (int i = 0; i < MAX_BALLS; i++)
+                if (!balls[i].isActive && activeBalls < MAX_BALLS)
                 {
-                    if (!balls[i].isActive && activeBalls < MAX_BALLS)
-                    {
-                        int sourceBallIdx = activeBallIndices[sourceIdx];
+                    int sourceBallIdx = activeBallIndices[sourceIdx];
 
-                        balls[i].isActive = true;
-                        balls[i].x = balls[sourceBallIdx].x; // Spawn from current active ball
-                        balls[i].y = balls[sourceBallIdx].y;
+                    balls[i].isActive = true;
+                    balls[i].x = balls[sourceBallIdx].x; // Spawn from current active ball
+                    balls[i].y = balls[sourceBallIdx].y;
 
-                        // Generate different angle for each spawn from same source
-                        double baseAngle = (rand() % 120 + 30) * pi / 180; // 30-150 degrees
-                        double angleOffset = spawn * pi / 6;               // Offset for multiple spawns from same ball
-                        double angle = baseAngle + angleOffset;
-                        if (rand() % 2 == 0)
-                            angle = pi - angle; // Mirror for variety
+                    // Generate random angle for variety
+                    double baseAngle = (rand() % 120 + 30) * pi / 180; // 30-150 degrees
+                    if (rand() % 2 == 0)
+                        baseAngle = pi - baseAngle; // Mirror for variety
 
-                        balls[i].dx = ball_spd * cos(angle);
-                        balls[i].dy = ball_spd * sin(angle);
-                        activeBalls++;
-                        break; // Found slot, move to next spawn
-                    }
+                    balls[i].dx = ball_spd * cos(baseAngle);
+                    balls[i].dy = ball_spd * sin(baseAngle);
+                    activeBalls++;
+                    break; // Found slot, move to next source ball
                 }
             }
         }
