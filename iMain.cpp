@@ -166,6 +166,19 @@ typedef struct
     bool isActive;
 } pw;
 pw powerUps[30];
+
+
+FILE *fpr, *fpw;
+#define MAX_SCORE 10
+#define NAME_LEN 50
+struct HighScores
+{
+    char name[NAME_LEN];
+    int pts;
+};
+struct HighScores highscores[MAX_SCORE];
+
+
 /*
 gamestate:
 0 = main menu
@@ -187,7 +200,6 @@ void pauseMenu(void);
 void drawBlocks(void);
 void displayOptions(void);
 void displayHelp(void);
-void displayHighscore(void);
 void ballMotion(void);
 void toggleFullscreen(void);
 void toggleMenuMusic(void);
@@ -199,6 +211,9 @@ bool isLevelCleared();
 void loadNextLevel();
 void explode(int i, int j, bool playSound);
 void activePower(int n);
+void displayHighscore(void);
+void loadHighscore(void);
+void updateHighscore(const char *name, int score);
 ///////////////////////////////////////////////////////////////
 
 /*
@@ -260,6 +275,7 @@ void iDraw()
     if (gameState == 101)
     {
         iClear();
+        mm_sound_check = false;
         iShowImage(0, 0, "assets/images/1.png");
         if (paddle_width == 150)
             iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
@@ -397,9 +413,21 @@ void iDraw()
     }
 
     // controls menu
-    else if (gameState == 3)
+    else if (gameState == 3) // highscore
     {
-        // displayHighscore();
+        for (int i = 0; i < MAX_SCORE; i++)
+        {
+            int pts;
+            char name[NAME_LEN];
+            if (fscanf(fpr, "%s %d\n", name, &pts) == 2)
+            {
+                strcpy(highscores[i].name, name);
+                highscores[i].pts = pts;
+            }
+        }
+
+        displayHighscore();
+
     }
     else if (gameState == 4)
     {
@@ -711,9 +739,12 @@ void iMouse(int button, int state, int mx, int my)
             }
             else if (selected_menu_idx == 1)
             {
-                // toggle main menu music
-                mm_sound_check = !mm_sound_check;
-                toggleMenuMusic();
+                // toggle main menu music if not from pausemenu
+                if (prevGameState != 100)
+                {
+                    mm_sound_check = !mm_sound_check;
+                    toggleMenuMusic();
+                }
             }
             else if (selected_menu_idx == 2)
             {
@@ -945,7 +976,7 @@ void iKeyboard(unsigned char key)
 
     if (gameState == 3) // high score
     {
-        // displayHighscore();
+        displayHighscore();
         switch (key)
         {
         case 27:
@@ -973,6 +1004,7 @@ void iKeyboard(unsigned char key)
         case 27:
             mbgchk = 1;
             gameState = prevGameState;
+            prevGameState = 4;
             break;
         case ' ':
         case '\r':
@@ -982,8 +1014,11 @@ void iKeyboard(unsigned char key)
             }
             else if (selected_menu_idx == 1)
             {
+                if (prevGameState != 100)
+                {
                 mm_sound_check = !mm_sound_check;
                 toggleMenuMusic();
+                }
             }
             else if (selected_menu_idx == 2)
             {
@@ -993,6 +1028,7 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 3)
             {
                 gameState = prevGameState;
+                prevGameState = 4;
             }
             break;
 
@@ -1058,6 +1094,7 @@ int main(int argc, char *argv[])
     glutInit(&argc, argv);
     iSetTimer(15, ballMotion);
     // place your own initialization codes here.
+    loadHighscore();
     iInitializeSound();
     iInitialize(screen_width, screen_height, "Rebound by 2405051 and 2405042");
     return 0;
@@ -1205,12 +1242,8 @@ void displayHelp(void)
     iSetColor(0, 0, 0);
     iFilledRectangle(0, 0, screen_width, screen_height);
 }
-void displayHighscore(void)
-{
-    gameState = 3;
-    iSetColor(0, 0, 0);
-    iFilledRectangle(0, 0, screen_width, screen_height);
-}
+
+
 void ballMotion(void)
 {
     if (gameState != 101)
@@ -1408,7 +1441,7 @@ void checkCollision(int ballIdx)
         {
             if (blockGrid[i][j] > 0)
             {
-                int block_x = j * block_width;
+                int block_x = 13 + j * block_width;
                 int block_y = screen_height - (i + 1) * block_height - 70;
 
                 // Find closest point on block to ball's center
@@ -1634,4 +1667,92 @@ void setup()
     iInitSprite(&ball);
     iChangeSpriteFrames(&ball, &ballImg, 1);
     iSetSpritePosition(&ball, 300, 200);
+}
+
+void displayHighscore(void)
+{
+    gameState = 3;
+
+    loadHighscore();
+    int line = 0;
+    iSetColor(255, 255, 255);
+    iTextTTF(100, screen_height - 100 - line * 40, "High Scores:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
+    line += 3;
+    
+    iTextTTF(100, screen_height - 100 - line * 40, "RANK", "assets/fonts/Bungee-Regular.ttf", 30);
+    iTextTTF(250, screen_height - 100 - line * 40, "PLAYER", "assets/fonts/Bungee-Regular.ttf", 30);
+    iTextTTF(550, screen_height - 100 - line * 40, "SCORE", "assets/fonts/Bungee-Regular.ttf", 30);
+    line += 2;
+    for (int i = 0; i < MAX_SCORE; i++)
+    {
+        char i_str[3];
+        sprintf(i_str, "%d", i + 1);
+        iTextTTF(100, screen_height - 100 - line * 40, i_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        if (highscores[i].pts == 0)
+        {
+            line++;
+            continue;
+        }
+            char pts_str[10];
+        sprintf(pts_str, "%d", highscores[i].pts);
+        iTextTTF(250, screen_height - 100 - line * 40, highscores[i].name, "assets/fonts/Bungee-Regular.ttf", 30);
+        iTextTTF(550, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        line++;
+    }
+}
+
+void loadHighscore(void)
+{
+    fpr = fopen("assets/data/score.txt", "r");
+    if (fpr == NULL)
+    {
+        printf("Error opening highscores file.\n");
+        return;
+    }
+
+    for (int i = 0; i < MAX_SCORE; i++)
+    {
+        if (fscanf(fpr, "%s %d", highscores[i].name, &highscores[i].pts) != 2)
+        {
+            highscores[i].name[0] = '\0';
+            highscores[i].pts = 0;
+        }
+    }
+    fclose(fpr);
+}
+
+void updateHighscore(char new_name[], int new_score)
+{
+    fpw = fopen("assets/data/score.txt", "w");
+    if (fpw == NULL)
+    {
+        printf("Error opening highscores file for writing.\n");
+        return;
+    }
+
+    for (int i = 0; i < MAX_SCORE; i++)
+    {
+        if (new_score > highscores[i].pts)
+        {
+            for (int j = MAX_SCORE - 1; j > i; j--)
+            {
+                strcpy(highscores[j].name, highscores[j - 1].name);
+                highscores[j].pts = highscores[j - 1].pts;
+            }
+            highscores[i].pts = new_score;
+            strcpy(highscores[i].name, new_name);
+            break;
+        }
+        else if (i == MAX_SCORE - 1 && new_score == highscores[i].pts)
+        {
+            for (int j = MAX_SCORE - 1; j <= i + 1; j--)
+            {
+                strcpy(highscores[j].name, highscores[j - 1].name);
+                highscores[j].pts = highscores[j - 1].pts;
+            }
+            highscores[i].pts = new_score;
+            strcpy(highscores[i].name, new_name);
+        }
+    }
+    fclose(fpw);
 }
