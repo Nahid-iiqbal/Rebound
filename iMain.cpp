@@ -4,6 +4,21 @@
 #include <windows.h>
 #include "iGraphics.h"
 #include "iSound.h"
+
+/*
+gamestate:
+0 = main menu
+1 = game
+2 = game over (i guess)
+3 = Highscore
+4 = Options
+5 = Help
+6 = Load Game
+
+110 = <main_game><level 1><base>
+100 = <main_game><paused>  [new experimental notation -rafid]
+*/
+
 // variables///////////////////////////////////////////////////////////
 float pi = 3.14159;
 int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
@@ -16,8 +31,8 @@ int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
 int ball_radius = 10;
-int lives = 3;
-int score = 0;
+int lives = 1;
+int score = 101;
 int dbx = 0;
 
 // Multiple balls system
@@ -49,6 +64,7 @@ int level = 5;
 bool loadingDone = false;
 int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
+int updateHighscoreFlag = 0;
 
 Sprite ball;
 Sprite blocks[5];
@@ -69,6 +85,56 @@ char block_path[5][100] = {
     "assets/images/blocks/3.png",
     "assets/images/blocks/4.png",
     "assets/images/blocks/5.png"};
+    
+    int blockGrid[15][15] = {0};
+    ///////////////////////////////powerups//////////////////////////////////////////////
+    typedef struct
+    {
+    float x, y;
+    int type;
+    float height, width;
+    bool isActive;
+} pw;
+pw powerUps[30];
+
+
+FILE *fpr, *fpw;
+#define MAX_SCORE 10
+#define NAME_LEN 50
+struct HighScores
+{
+    char name[NAME_LEN];
+    int pts;
+};
+struct HighScores highscores[MAX_SCORE];
+char playername[NAME_LEN];
+int nameLength = 0;
+
+
+
+///////////////////////////////////////////////////////////////
+void resetGame(void);
+void mainMenu(void);
+void pauseMenu(void);
+void drawBlocks(void);
+void displayOptions(void);
+void displayHelp(void);
+void ballMotion(void);
+void toggleFullscreen(void);
+void toggleMenuMusic(void);
+void toggleGameMusic(void);
+void loadScreen(int gamestate);
+void checkCollision(int ballIdx);
+int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
+bool isLevelCleared();
+void loadNextLevel();
+void explode(int i, int j, bool playSound);
+void activePower(int n);
+void loadHighscore(void);
+void displayHighscore(void);
+void updateHighscore(char new_name[], int new_score);
+///////////////////////////////////////////////////////////////
+
 int levelGrid[5][15][15] = {
     {
         {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
@@ -155,66 +221,6 @@ int levelGrid[5][15][15] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     }};
-
-int blockGrid[15][15] = {0};
-///////////////////////////////powerups//////////////////////////////////////////////
-typedef struct
-{
-    float x, y;
-    int type;
-    float height, width;
-    bool isActive;
-} pw;
-pw powerUps[30];
-
-
-FILE *fpr, *fpw;
-#define MAX_SCORE 10
-#define NAME_LEN 50
-struct HighScores
-{
-    char name[NAME_LEN];
-    int pts;
-};
-struct HighScores highscores[MAX_SCORE];
-
-
-/*
-gamestate:
-0 = main menu
-1 = game
-2 = game over (i guess)
-3 = Highscore
-4 = Options
-5 = Help
-6 = Load Game
-
-110 = <main_game><level 1><base>
-100 = <main_game><paused>  [new experimental notation -rafid]
-*/
-
-///////////////////////////////////////////////////////////////
-void resetGame(void);
-void mainMenu(void);
-void pauseMenu(void);
-void drawBlocks(void);
-void displayOptions(void);
-void displayHelp(void);
-void ballMotion(void);
-void toggleFullscreen(void);
-void toggleMenuMusic(void);
-void toggleGameMusic(void);
-void loadScreen(int gamestate);
-void checkCollision(int ballIdx);
-int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
-bool isLevelCleared();
-void loadNextLevel();
-void explode(int i, int j, bool playSound);
-void activePower(int n);
-void displayHighscore(void);
-void loadHighscore(void);
-void updateHighscore(const char *name, int score);
-///////////////////////////////////////////////////////////////
 
 /*
 function iDraw() is called again and again by the system.
@@ -392,6 +398,26 @@ void iDraw()
             iStopSound(gamechannel);
             gamechannel = -1;
         }
+        if (updateHighscoreFlag == 0) // check but nothing else
+        {
+            for (int i=0; i<MAX_SCORE; i++)
+            {
+                if (score > highscores[i].pts)
+                {
+                    updateHighscoreFlag = 1;
+                    break;
+                }
+            }
+        }
+
+        else if (updateHighscoreFlag == 1) // taking input
+        {
+            iShowImage(0, 0, "assets/images/gominputmenu.png");
+            iSetColor(255, 255, 255);
+            iTextTTF(265, 442, playername, "assets/fonts/JetBrainsMono-Regular.ttf", 30);
+        }
+        else 
+        {
         iShowImage(0, 0, "assets/images/gameover1.jpg");
         iSetTransparentColor(0, 0, 0, 0.7);
         iFilledRectangle(10, 10, 980, 70);
@@ -410,6 +436,7 @@ void iDraw()
         iShowImage(345, 160, "assets/images/scoregom.png");
         iSetColor(255, 255, 255);
         iTextAdvanced(550, 167, scoreText, 0.3, 4);
+        }
     }
 
     // controls menu
@@ -586,12 +613,15 @@ void iMouseMove(int mx, int my)
     }
     if (gameState == 2)
     {
-        if (mx >= 63 && mx <= 313)
-            gomcheck = 0;
-        if (mx >= 375 && mx <= 625)
-            gomcheck = 1;
-        if (mx >= 687 && mx <= 937)
-            gomcheck = 2;
+        if (updateHighscoreFlag != 1)
+        {
+            if (mx >= 63 && mx <= 313)
+                gomcheck = 0;
+            if (mx >= 375 && mx <= 625)
+                gomcheck = 1;
+            if (mx >= 687 && mx <= 937)
+                gomcheck = 2;
+        }
     }
     if (gameState == 3)
     {
@@ -709,23 +739,26 @@ void iMouse(int button, int state, int mx, int my)
     }
     if (gameState == 2)
     {
-        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+        if (updateHighscoreFlag != 1)
         {
-            if (gomcheck == 0)
+            if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
             {
-                iStopAllSounds();
-                mbgchk = 1;
-                gameState = 0;
-            }
-            else if (gomcheck == 1)
-            {
-                resetGame();
-                isGameOver = false;
-                iStopAllSounds();
-            }
-            else if (gomcheck == 2)
-            {
-                exit(0);
+                if (gomcheck == 0)
+                {
+                    iStopAllSounds();
+                    mbgchk = 1;
+                    gameState = 0;
+                }
+                else if (gomcheck == 1)
+                {
+                    resetGame();
+                    isGameOver = false;
+                    iStopAllSounds();
+                }
+                else if (gomcheck == 2)
+                {
+                    exit(0);
+                }
             }
         }
     }
@@ -823,6 +856,7 @@ void iKeyboard(unsigned char key)
             {
                 // high score
                 displayHighscore();
+                prevGameState = gameState;
             }
             else if (selected_menu_idx == 5)
             {
@@ -930,47 +964,73 @@ void iKeyboard(unsigned char key)
 
     if (gameState == 2) // game over
     {
-        switch (key)
+        if (updateHighscoreFlag != 1)
         {
-        case 'a':
-        case 'A':
-            gomcheck += 2;
-            break;
-        case 'd':
-        case 'D':
-            gomcheck += 1;
-            break;
-        default:
-            break;
+            switch (key)
+            {
+            case 'a':
+            case 'A':
+                gomcheck += 2;
+                break;
+            case 'd':
+            case 'D':
+                gomcheck += 1;
+                break;
+            default:
+                break;
+            }
+            gomcheck = gomcheck % 3;
+
+            switch (key)
+            {
+            case ' ':
+            case '\r':
+
+                if (gomcheck == 0)
+                {
+                    iStopAllSounds();
+                    mbgchk = 1;
+                    gameState = 0;
+                }
+                else if (gomcheck == 1)
+                {
+                    resetGame();
+                    gameState = 101;
+                    isGameOver = false;
+                    iStopAllSounds();
+                }
+                else if (gomcheck == 2)
+                {
+                    exit(0);
+                }
+                break;
+
+            default:
+                break;
+            }
         }
-        gomcheck = gomcheck % 3;
-
-        switch (key)
+        else 
         {
-        case ' ':
-        case '\r':
-
-            if (gomcheck == 0)
-            {
-                iStopAllSounds();
-                mbgchk = 1;
-                gameState = 0;
+            if (key == 13)
+            { // Enter key
+                updateHighscore(playername, score);
+                gameState = 3;
+                prevGameState = 2;
+                updateHighscoreFlag = 2; // any random value except 0 or 1
             }
-            else if (gomcheck == 1)
-            {
-                resetGame();
-                gameState = 101;
-                isGameOver = false;
-                iStopAllSounds();
+            else if (key == 8 && nameLength > 0)
+            { // Backspace
+                nameLength--;
+                playername[nameLength] = '\0';
             }
-            else if (gomcheck == 2)
+            else if ((key >= 'A' && key <= 'Z') || (key >= 'a' && key <= 'z') || (key >= '0' && key <= '9'))
             {
-                exit(0);
+                if (nameLength < NAME_LEN - 1)
+                {
+                    playername[nameLength++] = key;
+                    playername[nameLength] = '\0';
+                }
             }
-            break;
-
-        default:
-            break;
         }
     }
 
@@ -980,9 +1040,22 @@ void iKeyboard(unsigned char key)
         switch (key)
         {
         case 27:
-            mbgchk = 1;
-            gameState = 0;
-            break;
+            if (prevGameState == 100)
+            {
+                mbgchk = 1;
+                gameState = 0;
+                break;
+            }
+            else if (prevGameState == 2)
+            {
+                mbgchk = 1;
+                gameState = 2;
+            }
+            else 
+            {
+                mbgchk = 1;
+                gameState = 0;
+            }
         default:
             break;
         }
@@ -1104,8 +1177,8 @@ void resetGame(void)
 {
     dbx = 0;
     isBallMoving = false;
-    lives = 3;
-    score = 0;
+    lives = 1;
+    score = 101;
     bgchk = 1;
     isGameOver = false;
     gameState = 101;
@@ -1669,6 +1742,26 @@ void setup()
     iSetSpritePosition(&ball, 300, 200);
 }
 
+void loadHighscore(void)
+{
+    fpr = fopen("assets/data/score.txt", "r");
+    if (fpr == NULL)
+    {
+        printf("Error opening highscores file.\n");
+        return;
+    }
+
+    for (int i = 0; i < MAX_SCORE; i++)
+    {
+        if (fscanf(fpr, "%s %d", highscores[i].name, &highscores[i].pts) != 2)
+        {
+            highscores[i].name[0] = '\0';
+            highscores[i].pts = 0;
+        }
+    }
+    fclose(fpr);
+}
+
 void displayHighscore(void)
 {
     gameState = 3;
@@ -1699,27 +1792,9 @@ void displayHighscore(void)
         iTextTTF(550, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
         line++;
     }
+    iTextTTF(100, 50, "Press ESC to go back", "assets/fonts/Bungee-Regular.ttf", 20);
 }
 
-void loadHighscore(void)
-{
-    fpr = fopen("assets/data/score.txt", "r");
-    if (fpr == NULL)
-    {
-        printf("Error opening highscores file.\n");
-        return;
-    }
-
-    for (int i = 0; i < MAX_SCORE; i++)
-    {
-        if (fscanf(fpr, "%s %d", highscores[i].name, &highscores[i].pts) != 2)
-        {
-            highscores[i].name[0] = '\0';
-            highscores[i].pts = 0;
-        }
-    }
-    fclose(fpr);
-}
 
 void updateHighscore(char new_name[], int new_score)
 {
@@ -1753,6 +1828,12 @@ void updateHighscore(char new_name[], int new_score)
             highscores[i].pts = new_score;
             strcpy(highscores[i].name, new_name);
         }
+    }
+    for (int i = 0; i < MAX_SCORE; i++)
+    {
+        if (highscores[i].pts == 0 && strcmp(highscores[i].name, "") == 0)
+            continue; // Skip empty entries
+        fprintf(fpw, "%s %d\n", highscores[i].name, highscores[i].pts);
     }
     fclose(fpw);
 }
