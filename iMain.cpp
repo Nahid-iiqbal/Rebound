@@ -31,8 +31,8 @@ int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
 int paddle_y = 15;
 int ball_radius = 10;
-int lives = 1;
-int score = 101;
+int lives = 3;
+int score = 0;
 int dbx = 0;
 
 // Multiple balls system
@@ -1177,8 +1177,8 @@ void resetGame(void)
 {
     dbx = 0;
     isBallMoving = false;
-    lives = 1;
-    score = 101;
+    lives = 3;
+    score = 0;
     bgchk = 1;
     isGameOver = false;
     gameState = 101;
