@@ -14,6 +14,7 @@ gamestate:
 4 = Options
 5 = Help
 6 = Load Game
+7 = level Cleared screen
 
 110 = <main_game><level 1><base>
 100 = <main_game><paused>  [new experimental notation -rafid]
@@ -1611,6 +1612,8 @@ bool isLevelCleared()
 }
 void loadNextLevel()
 {
+    int lives_temp = lives;
+    int score_temp = score;
     if (level >= 5)
         level = 1;
 
@@ -1619,6 +1622,8 @@ void loadNextLevel()
     iPauseTimer(0);
     iPauseSound(gamechannel);
     resetGame();
+    score = score_temp;
+    lives = lives_temp;
     loadingDone = true;
     gameState = 101;
     iResumeTimer(0);
