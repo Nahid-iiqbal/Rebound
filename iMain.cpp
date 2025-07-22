@@ -684,6 +684,7 @@ void iMouse(int button, int state, int mx, int my)
             {
                 // high score
                 displayHighscore();
+                prevGameState = gameState;
             }
             else if (selected_menu_idx == 4)
             {
@@ -1011,8 +1012,9 @@ void iKeyboard(unsigned char key)
         }
         else 
         {
-            if (key == 13)
+            if (key == 13 && nameLength > 0 && playername[0] != '\0')
             { // Enter key
+                
                 updateHighscore(playername, score);
                 gameState = 3;
                 prevGameState = 2;
@@ -1215,6 +1217,10 @@ void resetGame(void)
     {
         powerUps[i].isActive = false;
     }
+    
+    strcpy(playername, "");
+    nameLength = 0;
+    updateHighscoreFlag = 0;
 }
 
 void pauseMenu(void)
