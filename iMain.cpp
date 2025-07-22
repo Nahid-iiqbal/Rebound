@@ -1774,13 +1774,14 @@ void displayHighscore(void)
 
     loadHighscore();
     int line = 0;
-    iSetColor(255, 255, 255);
+    iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
+    iSetColor(255, 255, 255); //03bfeb
     iTextTTF(100, screen_height - 100 - line * 40, "High Scores:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
     line += 3;
     
     iTextTTF(100, screen_height - 100 - line * 40, "RANK", "assets/fonts/Bungee-Regular.ttf", 30);
     iTextTTF(250, screen_height - 100 - line * 40, "PLAYER", "assets/fonts/Bungee-Regular.ttf", 30);
-    iTextTTF(550, screen_height - 100 - line * 40, "SCORE", "assets/fonts/Bungee-Regular.ttf", 30);
+    iTextTTF(800, screen_height - 100 - line * 40, "SCORE", "assets/fonts/Bungee-Regular.ttf", 30);
     line += 2;
     for (int i = 0; i < MAX_SCORE; i++)
     {
@@ -1795,9 +1796,10 @@ void displayHighscore(void)
             char pts_str[10];
         sprintf(pts_str, "%d", highscores[i].pts);
         iTextTTF(250, screen_height - 100 - line * 40, highscores[i].name, "assets/fonts/Bungee-Regular.ttf", 30);
-        iTextTTF(550, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        iTextTTF(800, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
         line++;
     }
+    iSetColor(  255, 0, 0);
     iTextTTF(100, 50, "Press ESC to go back", "assets/fonts/Bungee-Regular.ttf", 20);
 }
 
