@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "iGraphics.h"
 #include "iSound.h"
+#include <time.h>
 
 /*
 gamestate:
@@ -67,6 +68,7 @@ int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
 int updateHighscoreFlag = 0;
 
+
 Sprite ball;
 Sprite blocks[5];
 Image ballImg, blockImgs[5];
@@ -87,14 +89,14 @@ char block_path[5][100] = {
     "assets/images/blocks/4.png",
     "assets/images/blocks/5.png"};
     
-    int blockGrid[15][15] = {0};
-    ///////////////////////////////powerups//////////////////////////////////////////////
-    typedef struct
-    {
-    float x, y;
-    int type;
-    float height, width;
-    bool isActive;
+int blockGrid[15][15] = {0};
+///////////////////////////////powerups//////////////////////////////////////////////
+typedef struct
+{
+float x, y;
+int type;
+float height, width;
+bool isActive;
 } pw;
 pw powerUps[30];
 
@@ -112,6 +114,19 @@ char playername[NAME_LEN];
 int nameLength = 0;
 
 
+FILE *savefile;
+#define MAX_SLOT 10
+
+struct SavedData
+{
+    char timestamp[30];
+    int score;
+    int level;
+    int lives;
+    int blockState[15][15];
+
+};
+struct SavedData savedData[MAX_SLOT];
 
 ///////////////////////////////////////////////////////////////
 void resetGame(void);
@@ -134,6 +149,7 @@ void activePower(int n);
 void loadHighscore(void);
 void displayHighscore(void);
 void updateHighscore(char new_name[], int new_score);
+void displaySavedGames(void);
 ///////////////////////////////////////////////////////////////
 
 int levelGrid[5][15][15] = {
@@ -408,8 +424,8 @@ void iDraw()
                     updateHighscoreFlag = 1;
                     break;
                 }
+                updateHighscoreFlag = 2; // any value except 0 or 1 would work
             }
-            updateHighscoreFlag = 2; // any value except 0 or 1 would work
         }
 
         else if (updateHighscoreFlag == 1) // taking input
@@ -1851,4 +1867,13 @@ void updateHighscore(char new_name[], int new_score)
         fprintf(fpw, "%s %d\n", highscores[i].name, highscores[i].pts);
     }
     fclose(fpw);
+}
+
+void displaySavedGames(void)
+{
+    // Show saved games
+    iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
+    iSetColor(255, 255, 255);
+    iTextTTF(100, screen_height - 100, "Saved Games:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
+
 }
