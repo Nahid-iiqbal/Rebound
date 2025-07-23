@@ -149,7 +149,9 @@ void activePower(int n);
 void loadHighscore(void);
 void displayHighscore(void);
 void updateHighscore(char new_name[], int new_score);
+void loadData(void);
 void displaySavedGames(void);
+int saveGame(void);
 ///////////////////////////////////////////////////////////////
 
 int levelGrid[5][15][15] = {
@@ -528,7 +530,8 @@ void iDraw()
 
     else if (gameState == 6)
     {
-        // load game
+        displaySavedGames();
+
     }
     else if (gameState == 7)
     {
@@ -663,6 +666,49 @@ void iMouseMove(int mx, int my)
             selected_menu_idx = 3;
         }
     }
+    if (gameState == 6) // load game
+    {
+        if (my < screen_height - 260 - 0 * 40 && my > screen_height - 260 - 1 * 40)
+        {
+            selected_menu_idx = 1;
+        }
+        else if (my < screen_height - 260 - 1 * 40 && my > screen_height - 260 - 2 * 40)
+        {
+            selected_menu_idx = 2;
+        }
+        else if (my < screen_height - 260 - 2 * 40 && my > screen_height - 260 - 3 * 40)
+        {
+            selected_menu_idx = 3;
+        }
+        else if (my < screen_height - 260 - 3 * 40 && my > screen_height - 260 - 4 * 40)
+        {
+            selected_menu_idx = 4;
+        }
+        else if (my < screen_height - 260 - 4 * 40 && my > screen_height - 260 - 5 * 40)
+        {
+            selected_menu_idx = 5;
+        }
+        else if (my < screen_height - 260 - 5 * 40 && my > screen_height - 260 - 6 * 40)
+        {
+            selected_menu_idx = 6;
+        }
+        else if (my < screen_height - 260 - 6 * 40 && my > screen_height - 260 - 7 * 40)
+        {
+            selected_menu_idx = 7;
+        }
+        else if (my < screen_height - 260 - 7 * 40 && my > screen_height - 260 - 8 * 40)
+        {
+            selected_menu_idx = 8;
+        }
+        else if (my < screen_height - 260 - 8 * 40 && my > screen_height - 260 - 9 * 40)
+        {
+            selected_menu_idx = 9;
+        }
+        else if (my < screen_height - 260 - 9 * 40 && my > screen_height - 260 - 10 * 40)
+        {
+            selected_menu_idx = 10;
+        }
+    }
 }
 
 /*5unction iMouseDrag() is called when the user presses and drags the mouse.
@@ -696,7 +742,9 @@ void iMouse(int button, int state, int mx, int my)
             else if (selected_menu_idx == 2)
             {
                 // load game
-                // gameState = 6;
+                prevGameState = gameState;
+                gameState = 6;
+                selected_menu_idx = 0;
             }
             else if (selected_menu_idx == 3)
             {
@@ -734,8 +782,16 @@ void iMouse(int button, int state, int mx, int my)
             }
             if (selected_menu_idx == 1)
             {
-                prevGameState = gameState;
-                displayOptions();
+                // prevGameState = gameState;
+                // displayOptions();
+                if (saveGame())
+                {
+                    printf("Game saved successfully.\n");
+                }
+                else
+                {
+                    printf("No Empty Slot Available.\n");
+                }
             }
             if (selected_menu_idx == 2)
             {
@@ -810,6 +866,32 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
+    if (gameState == 6) // load game
+    {
+        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+        {
+            if (selected_menu_idx > 0)
+            {
+                loadData();
+                if (strlen(savedData[selected_menu_idx - 1].timestamp) != 0)
+                {
+                    resetGame();
+                    score = savedData[selected_menu_idx - 1].score;
+                    lives = savedData[selected_menu_idx - 1].lives;
+                    level = savedData[selected_menu_idx - 1].level;
+                    for (int i = 0; i < 15; i++)
+                    {
+                        for (int j = 0; j < 15; j++)
+                        {
+                            blockGrid[i][j] = savedData[selected_menu_idx - 1].blockState[i][j];
+                        }
+                    }
+                    iResumeTimer(0);
+                    iStopAllSounds();
+                }
+            }
+        }
+    }
 }
 
 /*
@@ -861,7 +943,9 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 2)
             {
                 // load game
-                // gameState = 6;
+                prevGameState = gameState;
+                gameState = 6;
+                selected_menu_idx = 0;
             }
 
             else if (selected_menu_idx == 3)
@@ -924,8 +1008,16 @@ void iKeyboard(unsigned char key)
             }
             if (selected_menu_idx == 1)
             {
-                prevGameState = gameState;
-                displayOptions();
+                // prevGameState = gameState;
+                // displayOptions();
+                if (saveGame())
+                {
+                    printf("Game saved successfully.\n");
+                }
+                else
+                {
+                    printf("No Empty Slot Available.\n");
+                }
             }
             if (selected_menu_idx == 2)
             {
@@ -1147,8 +1239,45 @@ void iKeyboard(unsigned char key)
     if (gameState == 6) // load game
     {
         // load game
+        
         switch (key)
         {
+        case 'w':
+        case 'W':
+            selected_menu_idx = (selected_menu_idx + 10) % 11;
+            if (selected_menu_idx == 0)
+                selected_menu_idx = 1;
+            break;
+
+        case 's':
+        case 'S':
+            selected_menu_idx = (selected_menu_idx + 1) % 11;
+            if (selected_menu_idx == 0)
+                selected_menu_idx = 10;
+            break;
+
+        case '\r':
+            if (selected_menu_idx > 0)
+            {
+                loadData();
+                if (strlen(savedData[selected_menu_idx - 1].timestamp) != 0)
+                {
+                    resetGame();
+                    score = savedData[selected_menu_idx - 1].score;
+                    lives = savedData[selected_menu_idx - 1].lives;
+                    level = savedData[selected_menu_idx - 1].level;
+                    for (int i = 0; i < 15; i++)
+                    {
+                        for (int j = 0; j < 15; j++)
+                        {
+                            blockGrid[i][j] = savedData[selected_menu_idx - 1].blockState[i][j];
+                        }
+                    }
+                    iResumeTimer(0);
+                    iStopAllSounds();
+                }
+            }
+            break;
         case 27:
             mbgchk = 1;
             gameState = 0;
@@ -1869,11 +1998,125 @@ void updateHighscore(char new_name[], int new_score)
     fclose(fpw);
 }
 
+void loadData(void)
+{
+    // read and load
+    savefile = fopen("assets/data/savedgame.txt", "r");
+    if (savefile == NULL)
+    {
+        printf("Error opening save file.\n");
+        return;
+    }
+    for (int i = 0; i < MAX_SLOT; i++)
+    {
+        fscanf(savefile, "%s", savedData[i].timestamp);
+        if (strlen(savedData[i].timestamp))
+        {
+            fscanf(savefile, "%d %d %d", &savedData[i].score, &savedData[i].level, &savedData[i].lives);
+            for (int j = 0; j < 15; j++)
+            {
+                for (int k = 0; k < 15; k++)
+                {
+                    fscanf(savefile, "%d", &savedData[i].blockState[j][k]);
+                }
+            }
+        }
+        else
+        {
+            strcpy(savedData[i].timestamp, "");
+        }
+    }
+    fclose(savefile);
+
+}
+
 void displaySavedGames(void)
 {
-    // Show saved games
+    loadData();
+    int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
-    iSetColor(255, 255, 255);
-    iTextTTF(100, screen_height - 100, "Saved Games:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
+    iSetColor(255, 255, 255); //03bfeb
+    iTextTTF(100, screen_height - 100 - line * 40, "Saved Games:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
+    line += 3;
+    
+    iTextTTF(100, screen_height - 100 - line * 40, "SLOT", "assets/fonts/Bungee-Regular.ttf", 30);
+    iTextTTF(300, screen_height - 100 - line * 40, "TIME", "assets/fonts/Bungee-Regular.ttf", 30);
+    line += 2;
+    for (int i = 0; i < MAX_SLOT; i++)
+    {
+        char i_str[3];
+        sprintf(i_str, "%d", i + 1);
+        iTextTTF(100, screen_height - 100 - line * 40, i_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        if (i + 1 == selected_menu_idx)
+            iSetColor(245, 245, 67); // f5f543
+        if (strlen(savedData[i].timestamp))
+        {
+            char modified_timestamp[25];
+            strcpy(modified_timestamp, savedData[i].timestamp);
+            modified_timestamp[strlen(modified_timestamp)] = '\0';
+            iTextTTF(300, screen_height - 100 - line * 40, modified_timestamp, "assets/fonts/Bungee-Regular.ttf", 30);
+        }
+        else
+        {
+            iTextTTF(300, screen_height - 100 - line * 40, "<EMPTY_SLOT>", "assets/fonts/Bungee-Regular.ttf", 30);
+        }
+        iSetColor(255, 255, 255);
+        line++;
+    }
+    iSetColor(255, 0, 0);
+    iTextTTF(100, 50, "Press ESC to go back", "assets/fonts/Bungee-Regular.ttf", 20);
 
+}
+
+int saveGame(void)
+{
+    loadData();
+
+    for (int i=0; i<MAX_SLOT; i++)
+    {
+        if (!strlen(savedData[i].timestamp))
+        {
+            time_t t = time(NULL);
+            char *time_s = ctime(&t);
+            time_s[3] = '_';
+            time_s[7] = '_';
+            time_s[10] = '_';
+            time_s[19] = '_';
+            time_s[24] = '\0';
+            strcpy(savedData[i].timestamp, time_s);
+            savedData[i].score = score;
+            savedData[i].level = level;
+            savedData[i].lives = lives;
+            for (int j=0; j<15; j++)
+            {
+                for (int k=0; k<15; k++)
+                {
+                    savedData[i].blockState[j][k] = blockGrid[j][k];
+                }
+            }
+
+            // fprintf to file
+            savefile = fopen("assets/data/savedgame.txt", "w");
+
+            for (int j = 0; j < MAX_SLOT; j++)
+            {
+                if (strlen(savedData[j].timestamp))
+                {
+                    fprintf(savefile, "%s %d %d %d ", savedData[i].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
+                    for (int k = 0; k < 15; k++)
+                    {
+                        for (int l = 0; l < 15; l++)
+                        {
+                            fprintf(savefile, "%d ", savedData[j].blockState[k][l]);
+                        }
+                    }
+                    fprintf(savefile, "\n");
+                }
+            }
+
+            fclose(savefile);
+            return 1;
+        }
+    }
+    return 0;
 }
