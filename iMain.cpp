@@ -86,18 +86,17 @@ char block_path[5][100] = {
     "assets/images/blocks/3.png",
     "assets/images/blocks/4.png",
     "assets/images/blocks/5.png"};
-    
-    int blockGrid[15][15] = {0};
-    ///////////////////////////////powerups//////////////////////////////////////////////
-    typedef struct
-    {
+
+int blockGrid[15][15] = {0};
+///////////////////////////////powerups//////////////////////////////////////////////
+typedef struct
+{
     float x, y;
     int type;
     float height, width;
     bool isActive;
 } pw;
 pw powerUps[30];
-
 
 FILE *fpr, *fpw;
 #define MAX_SCORE 10
@@ -110,8 +109,6 @@ struct HighScores
 struct HighScores highscores[MAX_SCORE];
 char playername[NAME_LEN];
 int nameLength = 0;
-
-
 
 ///////////////////////////////////////////////////////////////
 void resetGame(void);
@@ -401,7 +398,7 @@ void iDraw()
         }
         if (updateHighscoreFlag == 0) // check but nothing else
         {
-            for (int i=0; i<MAX_SCORE; i++)
+            for (int i = 0; i < MAX_SCORE; i++)
             {
                 if (score > highscores[i].pts)
                 {
@@ -417,26 +414,26 @@ void iDraw()
             iSetColor(255, 255, 255);
             iTextTTF(265, 442, playername, "assets/fonts/JetBrainsMono-Regular.ttf", 30);
         }
-        else 
+        else
         {
-        iShowImage(0, 0, "assets/images/gameover1.jpg");
-        iSetTransparentColor(0, 0, 0, 0.7);
-        iFilledRectangle(10, 10, 980, 70);
-        iShowImage(63, 20, "assets/images/gom_mainmenu_blue.png");
-        iShowImage(375, 20, "assets/images/gom_tryagain_blue.png");
-        iShowImage(687, 20, "assets/images/gom_exit_blue.png");
-        if (gomcheck == 0)
-            iShowImage(63, 20, "assets/images/gom_mainmenu_red.png");
-        if (gomcheck == 1)
-            iShowImage(375, 20, "assets/images/gom_tryagain_red.png");
-        if (gomcheck == 2)
-            iShowImage(687, 20, "assets/images/gom_exit_red.png");
+            iShowImage(0, 0, "assets/images/gameover1.jpg");
+            iSetTransparentColor(0, 0, 0, 0.7);
+            iFilledRectangle(10, 10, 980, 70);
+            iShowImage(63, 20, "assets/images/gom_mainmenu_blue.png");
+            iShowImage(375, 20, "assets/images/gom_tryagain_blue.png");
+            iShowImage(687, 20, "assets/images/gom_exit_blue.png");
+            if (gomcheck == 0)
+                iShowImage(63, 20, "assets/images/gom_mainmenu_red.png");
+            if (gomcheck == 1)
+                iShowImage(375, 20, "assets/images/gom_tryagain_red.png");
+            if (gomcheck == 2)
+                iShowImage(687, 20, "assets/images/gom_exit_red.png");
 
-        iSetColor(0, 0, 0);
-        iFilledRectangle(265, 150, 500, 70);
-        iShowImage(345, 160, "assets/images/scoregom.png");
-        iSetColor(255, 255, 255);
-        iTextAdvanced(550, 167, scoreText, 0.3, 4);
+            iSetColor(0, 0, 0);
+            iFilledRectangle(265, 150, 500, 70);
+            iShowImage(345, 160, "assets/images/scoregom.png");
+            iSetColor(255, 255, 255);
+            iTextAdvanced(550, 167, scoreText, 0.3, 4);
         }
     }
 
@@ -455,7 +452,6 @@ void iDraw()
         }
 
         displayHighscore();
-
     }
     else if (gameState == 4)
     {
@@ -1011,11 +1007,11 @@ void iKeyboard(unsigned char key)
                 break;
             }
         }
-        else 
+        else
         {
             if (key == 13 && nameLength > 0 && playername[0] != '\0')
             { // Enter key
-                
+
                 updateHighscore(playername, score);
                 gameState = 3;
                 prevGameState = 2;
@@ -1054,7 +1050,7 @@ void iKeyboard(unsigned char key)
                 mbgchk = 1;
                 gameState = 2;
             }
-            else 
+            else
             {
                 mbgchk = 1;
                 gameState = 0;
@@ -1092,8 +1088,8 @@ void iKeyboard(unsigned char key)
             {
                 if (prevGameState != 100)
                 {
-                mm_sound_check = !mm_sound_check;
-                toggleMenuMusic();
+                    mm_sound_check = !mm_sound_check;
+                    toggleMenuMusic();
                 }
             }
             else if (selected_menu_idx == 2)
@@ -1218,7 +1214,7 @@ void resetGame(void)
     {
         powerUps[i].isActive = false;
     }
-    
+
     strcpy(playername, "");
     nameLength = 0;
     updateHighscoreFlag = 0;
@@ -1322,7 +1318,6 @@ void displayHelp(void)
     iSetColor(0, 0, 0);
     iFilledRectangle(0, 0, screen_width, screen_height);
 }
-
 
 void ballMotion(void)
 {
@@ -1540,13 +1535,13 @@ void checkCollision(int ballIdx)
 
                     if (min_distance == dx_left || min_distance == dx_right)
                     {
-                        balls[ballIdx].dx = -balls[ballIdx].dx; // Horizontal bounce
                         balls[ballIdx].x = (min_distance == dx_left) ? block_x - ball_radius : block_x + block_width + ball_radius;
+                        balls[ballIdx].dx = -balls[ballIdx].dx * 1.005; // Horizontal bounce
                     }
                     else
                     {
-                        balls[ballIdx].dy = -balls[ballIdx].dy; // Vertical bounce
                         balls[ballIdx].y = (min_distance == dy_top) ? block_y + block_height + ball_radius : block_y - ball_radius;
+                        balls[ballIdx].dy = -balls[ballIdx].dy * 1.005; // Vertical bounce
                     }
 
                     // Update block and score
@@ -1780,10 +1775,10 @@ void displayHighscore(void)
     loadHighscore();
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
-    iSetColor(255, 255, 255); //03bfeb
+    iSetColor(255, 255, 255); // 03bfeb
     iTextTTF(100, screen_height - 100 - line * 40, "High Scores:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
     line += 3;
-    
+
     iTextTTF(100, screen_height - 100 - line * 40, "RANK", "assets/fonts/Bungee-Regular.ttf", 30);
     iTextTTF(250, screen_height - 100 - line * 40, "PLAYER", "assets/fonts/Bungee-Regular.ttf", 30);
     iTextTTF(800, screen_height - 100 - line * 40, "SCORE", "assets/fonts/Bungee-Regular.ttf", 30);
@@ -1798,16 +1793,15 @@ void displayHighscore(void)
             line++;
             continue;
         }
-            char pts_str[10];
+        char pts_str[10];
         sprintf(pts_str, "%d", highscores[i].pts);
         iTextTTF(250, screen_height - 100 - line * 40, highscores[i].name, "assets/fonts/Bungee-Regular.ttf", 30);
         iTextTTF(800, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
         line++;
     }
-    iSetColor(  255, 0, 0);
+    iSetColor(255, 0, 0);
     iTextTTF(100, 50, "Press ESC to go back", "assets/fonts/Bungee-Regular.ttf", 20);
 }
-
 
 void updateHighscore(char new_name[], int new_score)
 {
