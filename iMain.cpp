@@ -409,6 +409,7 @@ void iDraw()
                     break;
                 }
             }
+            updateHighscoreFlag = 2; // any value except 0 or 1 would work
         }
 
         else if (updateHighscoreFlag == 1) // taking input
@@ -1610,6 +1611,7 @@ bool isLevelCleared()
     }
     return true;
 }
+
 void loadNextLevel()
 {
     int lives_temp = lives;
