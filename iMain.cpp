@@ -112,6 +112,7 @@ struct HighScores
 struct HighScores highscores[MAX_SCORE];
 char playername[NAME_LEN];
 int nameLength = 0;
+int newrank = 0;
 
 
 FILE *savefile;
@@ -472,7 +473,7 @@ void iDraw()
                 highscores[i].pts = pts;
             }
         }
-
+        // prevGameState = gameState;
         displayHighscore();
 
     }
@@ -950,16 +951,16 @@ void iKeyboard(unsigned char key)
 
             else if (selected_menu_idx == 3)
             {
-                // options
+                // high score
+                displayHighscore();
                 prevGameState = gameState;
-                displayOptions();
             }
 
             else if (selected_menu_idx == 4)
             {
-                // high score
-                displayHighscore();
+                // options
                 prevGameState = gameState;
+                displayOptions();
             }
             else if (selected_menu_idx == 5)
             {
@@ -1923,7 +1924,7 @@ void loadHighscore(void)
 void displayHighscore(void)
 {
     gameState = 3;
-
+    
     loadHighscore();
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
@@ -1976,6 +1977,7 @@ void updateHighscore(char new_name[], int new_score)
             }
             highscores[i].pts = new_score;
             strcpy(highscores[i].name, new_name);
+            newrank = i + 1;
             break;
         }
         else if (i == MAX_SCORE - 1 && new_score == highscores[i].pts)
@@ -1987,6 +1989,7 @@ void updateHighscore(char new_name[], int new_score)
             }
             highscores[i].pts = new_score;
             strcpy(highscores[i].name, new_name);
+            newrank = i + 1;
         }
     }
     for (int i = 0; i < MAX_SCORE; i++)
@@ -2102,7 +2105,7 @@ int saveGame(void)
             {
                 if (strlen(savedData[j].timestamp))
                 {
-                    fprintf(savefile, "%s %d %d %d ", savedData[i].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
+                    fprintf(savefile, "%s %d %d %d ", savedData[j].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
                     for (int k = 0; k < 15; k++)
                     {
                         for (int l = 0; l < 15; l++)
