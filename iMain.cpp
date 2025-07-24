@@ -1252,12 +1252,14 @@ void iKeyboard(unsigned char key)
             {
                 mbgchk = 1;
                 gameState = 0;
+                newrank = 0;
                 break;
             }
             else if (prevGameState == 2)
             {
                 mbgchk = 1;
                 gameState = 2;
+                newrank = 0;
             }
             else
             {
@@ -2101,8 +2103,14 @@ void displayHighscore(void)
         }
         char pts_str[10];
         sprintf(pts_str, "%d", highscores[i].pts);
+        if (i + 1 == newrank)
+        {
+            iSetColor(245, 245, 67); // f5f543
+            iTextTTF(100, screen_height - 100 - line * 40, i_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        }
         iTextTTF(250, screen_height - 100 - line * 40, highscores[i].name, "assets/fonts/Bungee-Regular.ttf", 30);
         iTextTTF(800, screen_height - 100 - line * 40, pts_str, "assets/fonts/Bungee-Regular.ttf", 30);
+        iSetColor(255, 255, 255);
         line++;
     }
     iSetColor(255, 0, 0);
