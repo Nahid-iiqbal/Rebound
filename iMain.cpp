@@ -38,7 +38,7 @@ int score = 0;
 int dbx = 0;
 
 // Multiple balls system
-#define MAX_BALLS 5
+#define MAX_BALLS 50
 typedef struct
 {
     float x, y;
@@ -62,12 +62,11 @@ int prevGameState = 0;
 bool isBallMoving = false;
 bool mm_sound_check = true;
 bool game_sound_check = true;
-int level = 5;
+int level = 10;
 bool loadingDone = false;
 int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
 int updateHighscoreFlag = 0;
-
 
 Sprite ball;
 Sprite blocks[5];
@@ -88,15 +87,15 @@ char block_path[5][100] = {
     "assets/images/blocks/3.png",
     "assets/images/blocks/4.png",
     "assets/images/blocks/5.png"};
-    
+
 int blockGrid[15][15] = {0};
 ///////////////////////////////powerups//////////////////////////////////////////////
 typedef struct
 {
-float x, y;
-int type;
-float height, width;
-bool isActive;
+    float x, y;
+    int type;
+    float height, width;
+    bool isActive;
 } pw;
 pw powerUps[30];
 
@@ -113,7 +112,6 @@ char playername[NAME_LEN];
 int nameLength = 0;
 int newrank = 0;
 
-
 FILE *savefile;
 #define MAX_SLOT 10
 
@@ -124,7 +122,6 @@ struct SavedData
     int level;
     int lives;
     int blockState[15][15];
-
 };
 struct SavedData savedData[MAX_SLOT];
 
@@ -151,10 +148,11 @@ void displayHighscore(void);
 void updateHighscore(char new_name[], int new_score);
 void loadData(void);
 void displaySavedGames(void);
-int saveGame(void);
+int saveGame(int slotIdx);
+void deleteSlot(int slotIndex);
 ///////////////////////////////////////////////////////////////
 
-int levelGrid[5][15][15] = {
+int levelGrid[10][15][15] = {
     {
         {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
         {2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5},
@@ -224,22 +222,108 @@ int levelGrid[5][15][15] = {
         {3, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 1},
     },
     {
-        {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {3, 0, 5, 0, 3, 0, 5, 0, 3, 0, 5, 0, 3, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {1, 0, 5, 0, 1, 0, 5, 0, 1, 0, 5, 0, 1, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {3, 0, 5, 0, 3, 0, 5, 0, 3, 0, 5, 0, 3, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {1, 0, 5, 0, 1, 0, 5, 0, 1, 0, 5, 0, 1, 0, 5},
+        {0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0, 4, 0},
+        {5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2, 0, 5, 0, 2},
+    },
+    {
+        {0, 0, 0, 4, 4, 4, 0, 0, 0, 4, 4, 4, 0, 0, 0},
+        {0, 5, 0, 0, 0, 0, 2, 3, 2, 0, 0, 0, 0, 5, 0},
+        {0, 0, 3, 3, 1, 0, 0, 5, 0, 0, 1, 3, 3, 0, 0},
+        {4, 0, 0, 0, 0, 4, 0, 1, 0, 4, 0, 0, 0, 0, 4},
+        {4, 4, 2, 0, 4, 4, 4, 0, 4, 4, 4, 0, 2, 4, 4},
+        {0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0},
+        {2, 0, 4, 0, 1, 1, 0, 4, 0, 1, 1, 0, 4, 0, 2},
+        {3, 0, 0, 4, 0, 5, 0, 0, 0, 5, 0, 4, 0, 0, 3},
+        {2, 0, 4, 0, 1, 1, 0, 4, 0, 1, 1, 0, 4, 0, 2},
+        {0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0},
+        {4, 4, 2, 0, 4, 4, 4, 0, 4, 4, 4, 0, 2, 4, 4},
+        {4, 0, 0, 0, 0, 4, 0, 1, 0, 4, 0, 0, 0, 0, 4},
+        {0, 0, 3, 3, 1, 0, 0, 5, 0, 0, 1, 3, 3, 0, 0},
+        {0, 5, 0, 0, 0, 0, 2, 3, 2, 0, 0, 0, 0, 5, 0},
+        {0, 0, 0, 4, 4, 4, 0, 0, 0, 4, 4, 4, 0, 0, 0},
+    },
+    {
+        {0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0},
+        {0, 1, 5, 0, 0, 0, 5, 0, 5, 0, 0, 0, 5, 1, 0},
+        {0, 0, 4, 2, 3, 0, 4, 0, 4, 0, 3, 2, 4, 0, 0},
+        {4, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 4},
+        {4, 0, 5, 0, 2, 4, 0, 5, 0, 4, 2, 0, 5, 0, 4},
+        {4, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4},
+        {4, 4, 4, 4, 4, 4, 1, 4, 1, 4, 4, 4, 4, 4, 4},
+        {4, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4},
+        {4, 0, 5, 0, 2, 4, 0, 5, 0, 4, 2, 0, 5, 0, 4},
+        {4, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 4},
+        {0, 0, 4, 2, 3, 0, 4, 0, 4, 0, 3, 2, 4, 0, 0},
+        {0, 1, 5, 0, 0, 0, 5, 0, 5, 0, 0, 0, 5, 1, 0},
+        {0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    },
+    {
+        {0, 0, 0, 4, 4, 4, 0, 0, 0, 4, 4, 4, 0, 0, 0},
+        {0, 0, 5, 0, 0, 0, 2, 0, 2, 0, 0, 0, 5, 0, 0},
+        {0, 2, 0, 3, 0, 4, 0, 0, 0, 4, 0, 3, 0, 2, 0},
+        {4, 0, 4, 0, 4, 0, 1, 0, 1, 0, 4, 0, 4, 0, 4},
+        {0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0},
+        {0, 3, 0, 4, 0, 0, 3, 4, 3, 0, 0, 4, 0, 3, 0},
+        {4, 0, 5, 0, 2, 0, 0, 4, 0, 0, 2, 0, 5, 0, 4},
+        {0, 1, 0, 0, 0, 3, 0, 0, 0, 3, 0, 0, 0, 1, 0},
+        {4, 0, 5, 0, 2, 0, 0, 4, 0, 0, 2, 0, 5, 0, 4},
+        {0, 3, 0, 4, 0, 0, 3, 4, 3, 0, 0, 4, 0, 3, 0},
+        {0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0},
+        {4, 0, 4, 0, 4, 0, 1, 0, 1, 0, 4, 0, 4, 0, 4},
+        {0, 2, 0, 3, 0, 4, 0, 0, 0, 4, 0, 3, 0, 2, 0},
+        {0, 0, 5, 0, 0, 0, 2, 0, 2, 0, 0, 0, 5, 0, 0},
+        {0, 0, 0, 4, 4, 4, 0, 0, 0, 4, 4, 4, 0, 0, 0},
+    },
+    {
+        {0, 1, 2, 1, 0, 1, 3, 1, 3, 1, 0, 2, 1, 1, 0},
+        {1, 0, 0, 0, 1, 0, 5, 0, 5, 0, 1, 0, 0, 0, 1},
+        {2, 0, 3, 0, 2, 0, 1, 0, 1, 0, 2, 0, 3, 0, 2},
+        {1, 5, 0, 4, 0, 2, 0, 3, 0, 2, 0, 4, 0, 5, 1},
+        {0, 0, 2, 0, 1, 0, 5, 0, 5, 0, 1, 0, 2, 0, 0},
+        {1, 3, 0, 2, 0, 3, 0, 2, 0, 3, 0, 2, 0, 3, 1},
+        {2, 0, 5, 0, 0, 0, 1, 0, 1, 0, 0, 0, 5, 0, 2},
+        {1, 0, 0, 1, 3, 1, 0, 5, 0, 1, 3, 1, 0, 0, 1},
+        {2, 0, 5, 0, 0, 0, 1, 0, 1, 0, 0, 0, 5, 0, 2},
+        {1, 3, 0, 2, 0, 3, 0, 2, 0, 3, 0, 2, 0, 3, 1},
+        {0, 0, 2, 0, 1, 0, 5, 0, 5, 0, 1, 0, 2, 0, 0},
+        {1, 5, 0, 4, 0, 2, 0, 3, 0, 2, 0, 4, 0, 5, 1},
+        {2, 0, 3, 0, 2, 0, 1, 0, 1, 0, 2, 0, 3, 0, 2},
+        {1, 0, 0, 0, 1, 0, 5, 0, 5, 0, 1, 0, 0, 0, 1},
+        {0, 1, 2, 1, 0, 1, 3, 1, 3, 1, 0, 2, 1, 1, 0},
+    },
+    {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    }};
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    },
+};
 
 /*
 function iDraw() is called again and again by the system.
@@ -326,7 +410,7 @@ void iDraw()
         iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         char levelText[20];
         sprintf(levelText, "Level: %d", level);
-        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 30);
+        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
@@ -383,6 +467,12 @@ void iDraw()
                 }
             }
         }
+
+        if (level == 10)
+        {
+            iSetColor(204,204,255);
+            iTextTTF(200, screen_height - 200, "HERE YOU DESERVE IT!", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 50);
+        }
     }
 
     // pause menu
@@ -397,7 +487,7 @@ void iDraw()
         }
         else if (selected_menu_idx == 1)
         {
-            iShowImage(50, 375, "assets/images/pm_option_yellow.png");
+            iShowImage(50, 375, "assets/images/pm_save_yellow.png");
         }
         else if (selected_menu_idx == 2)
         {
@@ -530,7 +620,6 @@ void iDraw()
     else if (gameState == 6)
     {
         displaySavedGames();
-
     }
     else if (gameState == 7)
     {
@@ -562,6 +651,10 @@ void iDraw()
             frameDelay = 0;
             loadNextLevel();
         }
+    }
+    else if (gameState == 8)
+    {
+        displaySavedGames();
     }
     glPopMatrix();
 }
@@ -665,7 +758,7 @@ void iMouseMove(int mx, int my)
             selected_menu_idx = 3;
         }
     }
-    if (gameState == 6) // load game
+    if (gameState == 6 || gameState == 8) // load game
     {
         if (my < screen_height - 260 - 0 * 40 && my > screen_height - 260 - 1 * 40)
         {
@@ -719,7 +812,8 @@ void iMouseDrag(int mx, int my)
 }
 
 /*
-function iMouse() is called when the user presses/releases the mouse.
+function iMouse() is called when the user presses/releases the mous
+e.
 (mx, my) is the position where the mouse pointer is.
 */
 void iMouse(int button, int state, int mx, int my)
@@ -768,7 +862,7 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
-    if (gameState == 100)
+    else if (gameState == 100)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
@@ -776,21 +870,21 @@ void iMouse(int button, int state, int mx, int my)
             {
                 gameState = 101;
                 iResumeTimer(0);
-                iResumeSound(gamechannel);
-                bgchk = 1;
+                if (gamechannel != -1)
+                    iResumeSound(gamechannel); // Resume the paused music
+                // Remove bgchk = 1; to prevent starting new music
             }
             if (selected_menu_idx == 1)
             {
-                // prevGameState = gameState;
-                // displayOptions();
-                if (saveGame())
-                {
-                    printf("Game saved successfully.\n");
-                }
-                else
-                {
-                    printf("No Empty Slot Available.\n");
-                }
+                // if (saveGame())
+                // {
+                //     printf("Game saved successfully.\n");
+                // }
+                // else
+                // {
+                //     printf("No Empty Slot Available.\n");
+                // }
+                gameState = 8;
             }
             if (selected_menu_idx == 2)
             {
@@ -805,13 +899,13 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
-    if (gameState == 101)
+    else if (gameState == 101)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
         }
     }
-    if (gameState == 2)
+    else if (gameState == 2)
     {
         if (updateHighscoreFlag != 1)
         {
@@ -836,7 +930,7 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
-    if (gameState == 4)
+    else if (gameState == 4)
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
@@ -865,7 +959,7 @@ void iMouse(int button, int state, int mx, int my)
             }
         }
     }
-    if (gameState == 6) // load game
+    else if (gameState == 6) // load game
     {
         if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
         {
@@ -1003,20 +1097,22 @@ void iKeyboard(unsigned char key)
             {
                 gameState = 101;
                 iResumeTimer(0);
-                iResumeSound(0);
+                if (gamechannel != -1)
+                    iResumeSound(gamechannel); // Resume the paused music
+                // Remove bgchk = 1; to prevent starting new music
             }
             if (selected_menu_idx == 1)
             {
-                // prevGameState = gameState;
-                // displayOptions();
-                if (saveGame())
-                {
-                    printf("Game saved successfully.\n");
-                }
-                else
-                {
-                    printf("No Empty Slot Available.\n");
-                }
+
+                // if (saveGame())
+                // {
+                //     printf("Game saved successfully.\n");
+                // }
+                // else
+                // {
+                //     printf("No Empty Slot Available.\n");
+                // }
+                gameState = 8;
             }
             if (selected_menu_idx == 2)
             {
@@ -1056,8 +1152,9 @@ void iKeyboard(unsigned char key)
         {
             if (!isBallMoving)
             {
-                balls[0].dx = ball_spd * cos(pi / 4);
-                balls[0].dy = ball_spd * sin(pi / 4);
+                float angle = pi / 4;
+                balls[0].dx = ball_spd * cos(angle);
+                balls[0].dy = ball_spd * sin(angle);
                 isBallMoving = true;
             }
             break;
@@ -1238,7 +1335,7 @@ void iKeyboard(unsigned char key)
     if (gameState == 6) // load game
     {
         // load game
-        
+
         switch (key)
         {
         case 'w':
@@ -1277,6 +1374,14 @@ void iKeyboard(unsigned char key)
                 }
             }
             break;
+        case 'd':
+        case 'D':
+            // Delete selected slot
+            if (selected_menu_idx > 0)
+            {
+                deleteSlot(selected_menu_idx - 1);
+            }
+            break;
         case 27:
             mbgchk = 1;
             gameState = 0;
@@ -1285,8 +1390,52 @@ void iKeyboard(unsigned char key)
             break;
         }
     }
-}
 
+    else if (gameState == 8)
+    {
+        switch (key)
+        {
+        case 'w':
+        case 'W':
+        {
+            selected_menu_idx = (selected_menu_idx + 10) % 11;
+            if (selected_menu_idx == 0)
+                selected_menu_idx = 1;
+            break;
+        }
+        case 's':
+        case 'S':
+        {
+            selected_menu_idx = (selected_menu_idx + 1) % 11;
+            if (selected_menu_idx == 0)
+                selected_menu_idx = 10;
+            break;
+        }
+        case 27:
+        {
+            gameState = 100;
+            break;
+        }
+        case '\r':
+        {
+            saveGame(selected_menu_idx - 1);
+            break;
+        }
+        case 'd':
+        case 'D':
+        {
+            // Delete selected slot
+            if (selected_menu_idx > 0)
+            {
+                deleteSlot(selected_menu_idx - 1);
+            }
+            break;
+        }
+        default:
+            break;
+        }
+    }
+}
 /*
 function iSpecialKeyboard() is called whenver user hits special keys likefunction
 keys, home, end, pg up, pg down, arraows etc. you have to use
@@ -1313,7 +1462,7 @@ void iSpecialKeyboard(unsigned char key)
 int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
-    iSetTimer(15, ballMotion);
+    iSetTimer(10, ballMotion);
     // place your own initialization codes here.
     loadHighscore();
     iInitializeSound();
@@ -1373,13 +1522,12 @@ void pauseMenu(void)
 {
     if (gamechannel != -1)
     {
-        iStopSound(gamechannel);
-        gamechannel = -1;
+        iPauseSound(gamechannel);
     }
 
     iShowImage(50, 255, "assets/images/pm_exittod_white.png");
     iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
-    iShowImage(50, 375, "assets/images/pm_option_white.png");
+    iShowImage(50, 375, "assets/images/pm_save_white.png");
     iShowImage(50, 435, "assets/images/pm_resume_white.png");
 }
 
@@ -1485,8 +1633,8 @@ void ballMotion(void)
             // Only position the first ball at paddle when not moving
             if (ballIdx == 0)
             {
-                balls[ballIdx].x = paddle_x + dbx + paddle_width / 2;
-                balls[ballIdx].y = paddle_height + paddle_y + ball_radius;
+                balls[ballIdx].x = (float)paddle_x + dbx + paddle_width / 2;
+                balls[ballIdx].y = (float)paddle_height + paddle_y + ball_radius;
             }
             continue;
         }
@@ -1685,12 +1833,12 @@ void checkCollision(int ballIdx)
                     if (min_distance == dx_left || min_distance == dx_right)
                     {
                         balls[ballIdx].x = (min_distance == dx_left) ? block_x - ball_radius : block_x + block_width + ball_radius;
-                        balls[ballIdx].dx = -balls[ballIdx].dx * 1.005; // Horizontal bounce
+                        balls[ballIdx].dx = -balls[ballIdx].dx; // Horizontal bounce
                     }
                     else
                     {
                         balls[ballIdx].y = (min_distance == dy_top) ? block_y + block_height + ball_radius : block_y - ball_radius;
-                        balls[ballIdx].dy = -balls[ballIdx].dy * 1.005; // Vertical bounce
+                        balls[ballIdx].dy = -balls[ballIdx].dy; // Vertical bounce
                     }
 
                     // Update block and score
@@ -1702,24 +1850,24 @@ void checkCollision(int ballIdx)
                     {
                         blockGrid[i][j] -= 1;
                         score += 50;
+                        if (rand() % 100 < 30 && isBallMoving)
+                        {
+                            for (int k = 0; k < 30; k++)
+                            {
+                                if (!powerUps[k].isActive)
+                                {
+                                    powerUps[k].isActive = true;
+                                    powerUps[k].x = j * block_width + block_width / 2;
+                                    powerUps[k].y = screen_height - (i + 1) * block_height;
+                                    powerUps[k].type = rand() % 8 + 1; // Updated to include multi-ball (type 8)
+                                    break;
+                                }
+                            }
+                        }
                     }
                     iPlaySound("assets/sounds/bounce.wav", false, 30);
 
                     // Spawn power-up (30% chance)
-                    if (rand() % 100 < 30 && isBallMoving)
-                    {
-                        for (int k = 0; k < 30; k++)
-                        {
-                            if (!powerUps[k].isActive)
-                            {
-                                powerUps[k].isActive = true;
-                                powerUps[k].x = j * block_width + block_width / 2;
-                                powerUps[k].y = screen_height - (i + 1) * block_height;
-                                powerUps[k].type = rand() % 8 + 1; // Updated to include multi-ball (type 8)
-                                break;
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -1812,6 +1960,7 @@ void activePower(int n)
     {
     case 1: // life
         iPlaySound("assets/sounds/powerup.mp3", false, 30);
+
         if (lives < 5)
             lives++;
         break;
@@ -1836,6 +1985,7 @@ void activePower(int n)
         paddle_width = 80;
         break;
     case 7: // game over
+
         iPlaySound("assets/sounds/powerdown.wav", false);
         iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
         isGameOver = true;
@@ -1861,28 +2011,34 @@ void activePower(int n)
         // Spawn 1 new ball from each active ball
         for (int sourceIdx = 0; sourceIdx < activeBallCount; sourceIdx++)
         {
-            // Find next available slot
-            for (int i = 0; i < MAX_BALLS; i++)
+            for (int spawn = 0; spawn < 2; spawn++)
             {
-                if (!balls[i].isActive && activeBalls < MAX_BALLS)
+                if (activeBalls >= MAX_BALLS)
+                    break; // No more slots available
+
+                for (int i = 0; i < MAX_BALLS; i++)
                 {
-                    int sourceBallIdx = activeBallIndices[sourceIdx];
+                    if (!balls[i].isActive && activeBalls < MAX_BALLS)
+                    {
+                        int sourceBallIdx = activeBallIndices[sourceIdx];
 
-                    balls[i].isActive = true;
-                    balls[i].x = balls[sourceBallIdx].x; // Spawn from current active ball
-                    balls[i].y = balls[sourceBallIdx].y;
+                        balls[i].isActive = true;
+                        balls[i].x = balls[sourceBallIdx].x; // Spawn from current active ball
+                        balls[i].y = balls[sourceBallIdx].y;
 
-                    // Generate random angle for variety
-                    double baseAngle = (rand() % 120 + 30) * pi / 180; // 30-150 degrees
-                    if (rand() % 2 == 0)
-                        baseAngle = pi - baseAngle; // Mirror for variety
+                        // Generate random angle for variety
+                        double baseAngle = (rand() % 120 + 30) * pi / 180; // 30-150 degrees
+                        if (rand() % 2 == 0)
+                            baseAngle = pi - baseAngle; // Mirror for variety
 
-                    balls[i].dx = ball_spd * cos(baseAngle);
-                    balls[i].dy = ball_spd * sin(baseAngle);
-                    activeBalls++;
-                    break; // Found slot, move to next source ball
+                        balls[i].dx = ball_spd * cos(baseAngle);
+                        balls[i].dy = ball_spd * sin(baseAngle);
+                        activeBalls++;
+                        break; // Found slot, move to next source ball
+                    }
                 }
             }
+            // Find next available slot
         }
         break;
     }
@@ -1921,7 +2077,7 @@ void loadHighscore(void)
 void displayHighscore(void)
 {
     gameState = 3;
-    
+
     loadHighscore();
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
@@ -1999,34 +2155,71 @@ void updateHighscore(char new_name[], int new_score)
 
 void loadData(void)
 {
+    // Initialize all slots as empty first
+    for (int i = 0; i < MAX_SLOT; i++)
+    {
+        strcpy(savedData[i].timestamp, "");
+        savedData[i].score = 0;
+        savedData[i].level = 0;
+        savedData[i].lives = 0;
+        for (int j = 0; j < 15; j++)
+        {
+            for (int k = 0; k < 15; k++)
+            {
+                savedData[i].blockState[j][k] = 0;
+            }
+        }
+    }
+
     // read and load
-    savefile = fopen("assets/data/savedgame.txt", "r");
+    savefile = fopen("saves/savedgame.txt", "r");
     if (savefile == NULL)
     {
         printf("Error opening save file.\n");
         return;
     }
+
     for (int i = 0; i < MAX_SLOT; i++)
     {
-        fscanf(savefile, "%s", savedData[i].timestamp);
-        if (strlen(savedData[i].timestamp))
+        char tempTimestamp[30];
+        if (fscanf(savefile, "%s", tempTimestamp) == 1)
         {
-            fscanf(savefile, "%d %d %d", &savedData[i].score, &savedData[i].level, &savedData[i].lives);
-            for (int j = 0; j < 15; j++)
+            if (strcmp(tempTimestamp, "EMPTY") == 0)
             {
-                for (int k = 0; k < 15; k++)
+                // This is an empty slot, read and discard the placeholder data
+                int tempScore, tempLevel, tempLives;
+                fscanf(savefile, "%d %d %d", &tempScore, &tempLevel, &tempLives);
+                for (int j = 0; j < 15; j++)
                 {
-                    fscanf(savefile, "%d", &savedData[i].blockState[j][k]);
+                    for (int k = 0; k < 15; k++)
+                    {
+                        int tempBlock;
+                        fscanf(savefile, "%d", &tempBlock);
+                    }
+                }
+                // Keep the slot empty (already initialized above)
+            }
+            else
+            {
+                // This is a real save, load the data
+                strcpy(savedData[i].timestamp, tempTimestamp);
+                fscanf(savefile, "%d %d %d", &savedData[i].score, &savedData[i].level, &savedData[i].lives);
+                for (int j = 0; j < 15; j++)
+                {
+                    for (int k = 0; k < 15; k++)
+                    {
+                        fscanf(savefile, "%d", &savedData[i].blockState[j][k]);
+                    }
                 }
             }
         }
         else
         {
-            strcpy(savedData[i].timestamp, "");
+            // No more data to read, remaining slots stay empty
+            break;
         }
     }
     fclose(savefile);
-
 }
 
 void displaySavedGames(void)
@@ -2034,10 +2227,10 @@ void displaySavedGames(void)
     loadData();
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
-    iSetColor(255, 255, 255); //03bfeb
-    iTextTTF(100, screen_height - 100 - line * 40, "Saved Games:", "assets/fonts/SpecialGothicExpandedOne-Regular.ttf", 64);
+    iSetColor(255, 255, 255); // 03bfeb
+    iTextTTF(100, screen_height - 100 - line * 40, "Saved Games:", "assets/fonts/Bungee-Regular.ttf", 64);
     line += 3;
-    
+
     iTextTTF(100, screen_height - 100 - line * 40, "SLOT", "assets/fonts/Bungee-Regular.ttf", 30);
     iTextTTF(300, screen_height - 100 - line * 40, "TIME", "assets/fonts/Bungee-Regular.ttf", 30);
     line += 2;
@@ -2062,60 +2255,145 @@ void displaySavedGames(void)
         iSetColor(255, 255, 255);
         line++;
     }
-    iSetColor(255, 0, 0);
-    iTextTTF(100, 50, "Press ESC to go back", "assets/fonts/Bungee-Regular.ttf", 20);
-
+    iSetColor(255, 255, 255);
+    iTextTTF(60, 30, "Controls: W/S = Navigate | D = Delete Slot | ENTER = Select | ESC = Back", "assets/fonts/RubikDoodleShadow-Regular.ttf", 25);
 }
 
-int saveGame(void)
+int saveGame(int slotIdx)
 {
     loadData();
 
-    for (int i=0; i<MAX_SLOT; i++)
+    time_t t = time(NULL);
+    char *time_s = ctime(&t);
+    time_s[3] = '_';
+    time_s[7] = '_';
+    time_s[10] = '_';
+    time_s[19] = '_';
+    time_s[24] = '\0';
+    strcpy(savedData[slotIdx].timestamp, time_s);
+    savedData[slotIdx].score = score;
+    savedData[slotIdx].level = level;
+    savedData[slotIdx].lives = lives;
+    for (int j = 0; j < 15; j++)
     {
-        if (!strlen(savedData[i].timestamp))
+        for (int k = 0; k < 15; k++)
         {
-            time_t t = time(NULL);
-            char *time_s = ctime(&t);
-            time_s[3] = '_';
-            time_s[7] = '_';
-            time_s[10] = '_';
-            time_s[19] = '_';
-            time_s[24] = '\0';
-            strcpy(savedData[i].timestamp, time_s);
-            savedData[i].score = score;
-            savedData[i].level = level;
-            savedData[i].lives = lives;
-            for (int j=0; j<15; j++)
-            {
-                for (int k=0; k<15; k++)
-                {
-                    savedData[i].blockState[j][k] = blockGrid[j][k];
-                }
-            }
-
-            // fprintf to file
-            savefile = fopen("assets/data/savedgame.txt", "w");
-
-            for (int j = 0; j < MAX_SLOT; j++)
-            {
-                if (strlen(savedData[j].timestamp))
-                {
-                    fprintf(savefile, "%s %d %d %d ", savedData[j].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
-                    for (int k = 0; k < 15; k++)
-                    {
-                        for (int l = 0; l < 15; l++)
-                        {
-                            fprintf(savefile, "%d ", savedData[j].blockState[k][l]);
-                        }
-                    }
-                    fprintf(savefile, "\n");
-                }
-            }
-
-            fclose(savefile);
-            return 1;
+            savedData[slotIdx].blockState[j][k] = blockGrid[j][k];
         }
     }
-    return 0;
+
+    // fprintf to file with consistent format
+    savefile = fopen("saves/savedgame.txt", "w");
+    if (savefile == NULL)
+    {
+        printf("Error opening save file for writing.\n");
+        return 0;
+    }
+    for (int j = 0; j < MAX_SLOT; j++)
+    {
+        if (strlen(savedData[j].timestamp))
+        {
+            fprintf(savefile, "%s %d %d %d ", savedData[j].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
+            for (int k = 0; k < 15; k++)
+            {
+                for (int l = 0; l < 15; l++)
+                {
+                    fprintf(savefile, "%d ", savedData[j].blockState[k][l]);
+                }
+            }
+            fprintf(savefile, "\n");
+        }
+        else
+        {
+            // Write empty slot placeholder
+            fprintf(savefile, "EMPTY 0 0 0 ");
+            for (int k = 0; k < 15; k++)
+            {
+                for (int l = 0; l < 15; l++)
+                {
+                    fprintf(savefile, "0 ");
+                }
+            }
+            fprintf(savefile, "\n");
+        }
+    }
+
+    fclose(savefile);
+    return 1;
+}
+
+void deleteSlot(int slotIndex)
+{
+    if (slotIndex < 0 || slotIndex >= MAX_SLOT)
+    {
+        printf("Invalid slot index: %d\n", slotIndex);
+        return;
+    }
+
+    // Load current data
+    loadData();
+
+    // Check if slot has data
+    if (!strlen(savedData[slotIndex].timestamp))
+    {
+        printf("Slot %d is already empty.\n", slotIndex + 1);
+        return;
+    }
+
+    // Clear the slot data
+    strcpy(savedData[slotIndex].timestamp, "");
+    savedData[slotIndex].score = 0;
+    savedData[slotIndex].level = 0;
+    savedData[slotIndex].lives = 0;
+
+    // Clear block state
+    for (int j = 0; j < 15; j++)
+    {
+        for (int k = 0; k < 15; k++)
+        {
+            savedData[slotIndex].blockState[j][k] = 0;
+        }
+    }
+
+    // Rewrite the save file with all slots (including empty ones)
+    savefile = fopen("saves/savedgame.txt", "w");
+    if (savefile == NULL)
+    {
+        printf("Error opening save file for deletion.\n");
+        return;
+    }
+
+    // Write all slots, including empty ones with placeholder data
+    for (int j = 0; j < MAX_SLOT; j++)
+    {
+        if (strlen(savedData[j].timestamp))
+        {
+            // Write actual save data
+            fprintf(savefile, "%s %d %d %d ", savedData[j].timestamp, savedData[j].score, savedData[j].level, savedData[j].lives);
+            for (int k = 0; k < 15; k++)
+            {
+                for (int l = 0; l < 15; l++)
+                {
+                    fprintf(savefile, "%d ", savedData[j].blockState[k][l]);
+                }
+            }
+            fprintf(savefile, "\n");
+        }
+        else
+        {
+            // Write empty slot placeholder
+            fprintf(savefile, "EMPTY 0 0 0 ");
+            for (int k = 0; k < 15; k++)
+            {
+                for (int l = 0; l < 15; l++)
+                {
+                    fprintf(savefile, "0 ");
+                }
+            }
+            fprintf(savefile, "\n");
+        }
+    }
+
+    fclose(savefile);
+    printf("Slot %d deleted successfully!\n", slotIndex + 1);
 }
