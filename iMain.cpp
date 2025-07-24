@@ -384,7 +384,6 @@ void iDraw()
     if (gameState == 101)
     {
         iClear();
-        mm_sound_check = false;
         iShowImage(0, 0, "assets/images/1.png");
         if (paddle_width == 150)
             iShowImage(paddle_x + dbx, paddle_y, "assets/images/paddle2.png");
