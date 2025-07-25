@@ -16,6 +16,7 @@ gamestate:
 5 = Help
 6 = Load Game
 7 = level Cleared screen
+8 = Display saved games
 
 110 = <main_game><level 1><base>
 100 = <main_game><paused>  [new experimental notation -rafid]
@@ -67,6 +68,10 @@ bool loadingDone = false;
 int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
 int updateHighscoreFlag = 0;
+int endingScreenFlag = 0;
+int creditsroll = 0;
+int creditscounter = 0;
+int lastmusic = 0;
 
 Sprite ball;
 Sprite blocks[5];
@@ -150,7 +155,10 @@ void loadData(void);
 void displaySavedGames(void);
 int saveGame(int slotIdx);
 void deleteSlot(int slotIndex);
+void endgame(void);\
+void displayCredits(void);
 ///////////////////////////////////////////////////////////////
+
 
 int levelGrid[10][15][15] = {
     {
@@ -403,14 +411,13 @@ void iDraw()
         iSetColor(255, 0, 0);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
-        iTextTTF(150, screen_height - 30, scoreText, "assets/fonts/Bungee-Regular.ttf", 25);
+        iTextBold(150, screen_height - 27, scoreText, GLUT_BITMAP_HELVETICA_18);
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
-        iTextTTF(950, screen_height - 30, lifeText, "assets/fonts/Bungee-Regular.ttf", 25);
+        iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
         char levelText[20];
-        iSetColor(127, 113, 227);
         sprintf(levelText, "Level: %d", level);
-        iTextTTF(450, screen_height - 30, levelText, "assets/fonts/Bungee-Regular.ttf", 30);
+        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
@@ -470,7 +477,7 @@ void iDraw()
 
         if (level == 10)
         {
-            iSetColor(204, 204, 255);
+            iSetColor(204,204,255);
             iTextTTF(200, screen_height - 200, "HERE YOU DESERVE IT!", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 50);
         }
     }
@@ -526,7 +533,13 @@ void iDraw()
             iSetColor(255, 255, 255);
             iTextTTF(265, 442, playername, "assets/fonts/JetBrainsMono-Regular.ttf", 30);
         }
-        else
+        else if (creditsroll)
+        {
+            gameState = 9;
+            creditscounter = 0;
+            
+        }
+            else
         {
             iShowImage(0, 0, "assets/images/gameover1.jpg");
             iSetTransparentColor(0, 0, 0, 0.7);
@@ -617,44 +630,105 @@ void iDraw()
         iShowImage(100, 50, "assets/images/help.png");
     }
 
-    else if (gameState == 6)
+    else if (gameState == 6) // load game
     {
         displaySavedGames();
     }
-    else if (gameState == 7)
+    else if (gameState == 7) // levelcleared screen
     {
-        if (!levelClearedAnimating)
+        if (endingScreenFlag == 0)
         {
-            levelClearedCounter = 0;
-            levelClearedAnimating = true;
-            iPauseTimer(0);
+            if (!levelClearedAnimating)
+            {
+                levelClearedCounter = 0;
+                levelClearedAnimating = true;
+                iPauseTimer(0);
+            }
+
+            static int frameDelay = 0;
+            frameDelay++;
+
+            if (frameDelay < 90)
+            {
+                iSetColor(237, 184, 38);
+                iTextTTF(290, 350, "LEVEL CLEARED!", "assets/fonts/Bungee-Regular.ttf", 50);
+            }
+
+            if (frameDelay > 200)
+            {
+                frameDelay = 0;
+                levelClearedCounter++;
+            }
+
+            if (levelClearedCounter >= 5)
+            {
+                levelClearedAnimating = false;
+                frameDelay = 0;
+                loadNextLevel();
+            }
         }
-
-        static int frameDelay = 0;
-        frameDelay++;
-
-        if (frameDelay < 90)
+        else if (endingScreenFlag == 1)
         {
-            iSetColor(237, 184, 38);
-            iTextTTF(290, 350, "LEVEL CLEARED!", "assets/fonts/Bungee-Regular.ttf", 50);
-        }
+            if (!levelClearedAnimating)
+            {
+                levelClearedCounter = 0;
+                levelClearedAnimating = true;
+                iPauseTimer(0);
+            }
 
-        if (frameDelay > 200)
-        {
-            frameDelay = 0;
-            levelClearedCounter++;
-        }
+            // if (!lastmusic)
+            // {
+            //     iStopAllSounds();
+            //     iPlaySound("assets/sounds/last_goodbye.mp3", true, 50);
+            //     lastmusic = 1;
+            // }
 
-        if (levelClearedCounter >= 5)
-        {
-            levelClearedAnimating = false;
-            frameDelay = 0;
-            loadNextLevel();
+            static int frameDelay = 0;
+            frameDelay++;
+
+            if (frameDelay < 100)
+            {
+                iSetColor(237, 184, 38);
+                iTextTTF(290, 350, "GAME COMPLETED!", "assets/fonts/Bungee-Regular.ttf", 50);
+            }
+
+            if (frameDelay > 200)
+            {
+                frameDelay = 0;
+                levelClearedCounter++;
+            }
+
+            if (levelClearedCounter >= 5)
+            {
+                levelClearedAnimating = false;
+                frameDelay = 0;
+                // loadNextLevel();
+                endgame();
+
+            }
         }
     }
     else if (gameState == 8)
     {
         displaySavedGames();
+    }
+    
+    else if (gameState == 9) // credits
+    {
+        printf("%d\n", creditscounter);
+        // iSetColor(255, 255, 255);
+        // iText(0, 750/2.0, "-----------------------------------------------------------------------------------------------------------------------------", GLUT_BITMAP_HELVETICA_18);
+        // iText(500, 750/2.0, "|", GLUT_BITMAP_HELVETICA_18);
+        if (!lastmusic)
+        {
+            iStopAllSounds();
+            iPlaySound("assets/sounds/last_goodbye.mp3", true);
+            lastmusic = 1;
+        }
+
+        displayCredits();
+
+
     }
     glPopMatrix();
 }
@@ -827,7 +901,6 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 1)
             {
                 // start game
-                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
@@ -1028,7 +1101,6 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 1)
             {
                 // main game
-                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
@@ -1225,7 +1297,10 @@ void iKeyboard(unsigned char key)
 
                 updateHighscore(playername, score);
                 gameState = 3;
-                prevGameState = 2;
+                if (creditsroll)
+                    prevGameState = 9; // credits
+                else
+                    prevGameState = 2;
                 updateHighscoreFlag = 2; // any random value except 0 or 1
             }
             else if (key == 8 && nameLength > 0)
@@ -1262,6 +1337,11 @@ void iKeyboard(unsigned char key)
                 mbgchk = 1;
                 gameState = 2;
                 newrank = 0;
+            }
+            else if (prevGameState == 9)
+            {
+                gameState = 9;
+                creditscounter = 0;
             }
             else
             {
@@ -1484,7 +1564,7 @@ void resetGame(void)
     isGameOver = false;
     gameState = 101;
     paddle_width = 150;
-    ball_spd = 10.0;
+    ball_spd = 10;
 
     // Initialize balls
     activeBalls = 1;
@@ -1520,6 +1600,7 @@ void resetGame(void)
     strcpy(playername, "");
     nameLength = 0;
     updateHighscoreFlag = 0;
+    endingScreenFlag = 0;
 }
 
 void pauseMenu(void)
@@ -1657,7 +1738,7 @@ void ballMotion(void)
             else if (balls[ballIdx].x - ball_radius < 0)
                 balls[ballIdx].x = ball_radius;
             balls[ballIdx].dx *= -1;
-            iPlaySound("assets/sounds/bounce_border.mp3", false);
+            iPlaySound("assets/sounds/bounce.wav", false, 30);
         }
 
         if (balls[ballIdx].y + ball_radius > screen_height)
@@ -1665,7 +1746,7 @@ void ballMotion(void)
             if (balls[ballIdx].y + ball_radius > screen_height)
                 balls[ballIdx].y = screen_height - ball_radius;
             balls[ballIdx].dy *= (-1);
-            iPlaySound("assets/sounds/bounce_border.mp3", false);
+            iPlaySound("assets/sounds/bounce.wav", false, 30);
         }
 
         // Paddle collision
@@ -1678,7 +1759,7 @@ void ballMotion(void)
             float position = ((paddle_x + dbx + paddle_width / 2) - balls[ballIdx].x) / (paddle_width / 2);
             float angle = (pi / 2) + position * (pi / 3);
             if (balls[ballIdx].dx != 0 && balls[ballIdx].dy != 0)
-                iPlaySound("assets/sounds/bounce_border.mp3", false);
+                iPlaySound("assets/sounds/bounce.wav", false, 30);
             balls[ballIdx].dx = ball_spd * cos(angle);
             balls[ballIdx].dy = ball_spd * sin(angle);
         }
@@ -1726,6 +1807,11 @@ void ballMotion(void)
     {
         level++;
         gameState = 7;
+        if (level > 10)
+        {
+            endingScreenFlag = 1;
+            lastmusic = 0;
+        }
     }
 
     // power-ups
@@ -1803,8 +1889,8 @@ void loadScreen(int gamestate)
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
 
-// Grok Code:
 
+// Grok Code:
 void checkCollision(int ballIdx)
 {
     if (balls[ballIdx].y <= 50)
@@ -1911,7 +1997,12 @@ void loadNextLevel()
 {
     int lives_temp = lives;
     int score_temp = score;
-
+    if (level > 10)
+    {
+        level = 1;
+        isGameOver = true;
+        gameState = 2;
+    }
     gameState = 7;
     loadingDone = false;
     iPauseTimer(0);
@@ -1975,20 +2066,20 @@ void activePower(int n)
         paddle_width = 200;
         break;
     case 4: // life decrease
-        iPlaySound("assets/sounds/powerdown.wav", false, 30);
+        iPlaySound("assets/sounds/powerdown.wav", false, 100);
         lives--;
         break;
     case 5: // speed increase
-        iPlaySound("assets/sounds/powerdown.wav", false, 30);
+        iPlaySound("assets/sounds/powerdown.wav", false, 100);
         ball_spd = 15;
         break;
     case 6: // paddle size decrease
-        iPlaySound("assets/sounds/powerdown.wav", false, 30);
+        iPlaySound("assets/sounds/powerdown.wav", false, 100);
         paddle_width = 80;
         break;
     case 7: // game over
 
-        iPlaySound("assets/sounds/powerdown.wav", false);
+        iPlaySound("assets/sounds/powerdown.wav", false, 100);
         iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
         isGameOver = true;
         level = 1;
@@ -2404,4 +2495,67 @@ void deleteSlot(int slotIndex)
 
     fclose(savefile);
     printf("Slot %d deleted successfully!\n", slotIndex + 1);
+}
+
+void endgame(void)
+{
+    isGameOver = true;
+    gameState = 2;
+    creditsroll = 1;
+
+}
+
+void displayCredits(void)
+{
+    double alpha;
+    if (creditscounter < 200)
+    {
+        alpha = (creditscounter > 100) ? 1.0 : (double) creditscounter / 100.0;
+        iSetTransparentColor(255, 255, 0, alpha);
+        // iShowImage(0, 0, "assets/images/credits1.png");
+        iTextTTF(330, 400, "A Project by", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetTransparentColor(255, 255, 255, alpha);
+        iTextTTF(400, 350, "nahid 2405051", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(400, 300, "rafid 2405042", "assets/fonts/Bungee-Regular.ttf", 24);
+    }
+
+    if (creditscounter >= 250 && creditscounter < 450)
+    {
+        alpha = ((creditscounter - 250) > 100) ? 1.0 : (double)(creditscounter - 250) / 100.0;
+        iSetTransparentColor(255, 255, 0, alpha);
+        // iShowImage(0, 0, "assets/images/credits2.png");
+        iTextTTF(275, 400, "Inspiration from", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetTransparentColor(255, 255, 255, alpha);
+        iTextTTF(433, 350, "Arkanoid", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(425, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
+    }
+    if (creditscounter >= 500 && creditscounter < 650)
+    {
+        alpha = ((creditscounter - 500) > 100) ? 1.0 : (double)(creditscounter - 500) / 100.0;
+        iSetTransparentColor(255, 255, 0, alpha);
+        // iShowImage(0, 0, "assets/images/credits3.png");
+        iTextTTF(305, 400, "Resources from", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetTransparentColor(255, 255, 255, alpha);
+        iTextTTF(330, 350, "non-copyright websites", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(425, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
+    }
+    if (creditscounter >= 700 && creditscounter <= 850)
+    {
+        alpha = ((creditscounter - 700) > 100) ? 1.0 : (double)(creditscounter - 700) / 100.0;
+        iSetTransparentColor(255, 255, 0, alpha);
+        // iShowImage(0, 0, "assets/images/credits4.png");
+        iTextTTF(265, 400, "Special Thanks to", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetTransparentColor(255, 255, 255, alpha);
+        iTextTTF(475, 350, "YOU", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(390, 300, "For enjoying it.", "assets/fonts/Bungee-Regular.ttf", 24);
+    }
+    if (creditscounter > 900)
+    {
+        creditscounter = 0;
+        gameState = 0; // go back to main menu
+        creditsroll = 0;
+        iStopAllSounds();
+        iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
+    }
+    creditscounter++;
 }
