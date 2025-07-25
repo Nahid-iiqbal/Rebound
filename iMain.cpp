@@ -152,7 +152,6 @@ int saveGame(int slotIdx);
 void deleteSlot(int slotIndex);
 ///////////////////////////////////////////////////////////////
 
-
 int levelGrid[10][15][15] = {
     {
         {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
@@ -404,13 +403,14 @@ void iDraw()
         iSetColor(255, 0, 0);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
-        iTextBold(150, screen_height - 27, scoreText, GLUT_BITMAP_HELVETICA_18);
+        iTextTTF(150, screen_height - 30, scoreText, "assets/fonts/Bungee-Regular.ttf", 25);
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
-        iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
+        iTextTTF(950, screen_height - 30, lifeText, "assets/fonts/Bungee-Regular.ttf", 25);
         char levelText[20];
+        iSetColor(127, 113, 227);
         sprintf(levelText, "Level: %d", level);
-        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 30);
+        iTextTTF(450, screen_height - 30, levelText, "assets/fonts/Bungee-Regular.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
@@ -470,7 +470,7 @@ void iDraw()
 
         if (level == 10)
         {
-            iSetColor(204,204,255);
+            iSetColor(204, 204, 255);
             iTextTTF(200, screen_height - 200, "HERE YOU DESERVE IT!", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 50);
         }
     }
@@ -827,6 +827,7 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 1)
             {
                 // start game
+                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
@@ -1027,6 +1028,7 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 1)
             {
                 // main game
+                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
@@ -1482,7 +1484,7 @@ void resetGame(void)
     isGameOver = false;
     gameState = 101;
     paddle_width = 150;
-    ball_spd = 10;
+    ball_spd = 10.0;
 
     // Initialize balls
     activeBalls = 1;
@@ -1655,7 +1657,7 @@ void ballMotion(void)
             else if (balls[ballIdx].x - ball_radius < 0)
                 balls[ballIdx].x = ball_radius;
             balls[ballIdx].dx *= -1;
-            iPlaySound("assets/sounds/bounce.wav", false, 30);
+            iPlaySound("assets/sounds/bounce_border.mp3", false);
         }
 
         if (balls[ballIdx].y + ball_radius > screen_height)
@@ -1663,7 +1665,7 @@ void ballMotion(void)
             if (balls[ballIdx].y + ball_radius > screen_height)
                 balls[ballIdx].y = screen_height - ball_radius;
             balls[ballIdx].dy *= (-1);
-            iPlaySound("assets/sounds/bounce.wav", false, 30);
+            iPlaySound("assets/sounds/bounce_border.mp3", false);
         }
 
         // Paddle collision
@@ -1676,7 +1678,7 @@ void ballMotion(void)
             float position = ((paddle_x + dbx + paddle_width / 2) - balls[ballIdx].x) / (paddle_width / 2);
             float angle = (pi / 2) + position * (pi / 3);
             if (balls[ballIdx].dx != 0 && balls[ballIdx].dy != 0)
-                iPlaySound("assets/sounds/bounce.wav", false, 30);
+                iPlaySound("assets/sounds/bounce_border.mp3", false);
             balls[ballIdx].dx = ball_spd * cos(angle);
             balls[ballIdx].dy = ball_spd * sin(angle);
         }
@@ -1909,8 +1911,6 @@ void loadNextLevel()
 {
     int lives_temp = lives;
     int score_temp = score;
-    if (level >= 5)
-        level = 1;
 
     gameState = 7;
     loadingDone = false;
