@@ -88,7 +88,7 @@ char block_path[5][100] = {
     "assets/images/blocks/4.png",
     "assets/images/blocks/5.png"};
 
-int blockGrid[15][15] = {0};
+int blockGrid[15][15];
 ///////////////////////////////powerups//////////////////////////////////////////////
 typedef struct
 {
@@ -151,6 +151,7 @@ void displaySavedGames(void);
 int saveGame(int slotIdx);
 void deleteSlot(int slotIndex);
 ///////////////////////////////////////////////////////////////
+
 
 int levelGrid[10][15][15] = {
     {
