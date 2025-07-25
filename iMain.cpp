@@ -131,7 +131,6 @@ void mainMenu(void);
 void pauseMenu(void);
 void drawBlocks(void);
 void displayOptions(void);
-void displayHelp(void);
 void ballMotion(void);
 void toggleFullscreen(void);
 void toggleMenuMusic(void);
@@ -855,7 +854,7 @@ void iMouse(int button, int state, int mx, int my)
             else if (selected_menu_idx == 5)
             {
                 // help menu
-                displayHelp();
+                gameState = 5;
             }
             else if (selected_menu_idx == 6)
             {
@@ -1059,7 +1058,7 @@ void iKeyboard(unsigned char key)
             else if (selected_menu_idx == 5)
             {
                 // help menu
-                displayHelp();
+                gameState = 5;
             }
             else if (selected_menu_idx == 6)
             {
@@ -1612,12 +1611,6 @@ void displayOptions(void)
         iTextTTF(70, screen_height - 430, "GAME MUSIC : OFF", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
     }
     iTextTTF(70, screen_height - 500, "BACK", "assets/fonts/RubikDoodleShadow-Regular.ttf", 31);
-}
-void displayHelp(void)
-{
-    gameState = 5;
-    iSetColor(0, 0, 0);
-    iFilledRectangle(0, 0, screen_width, screen_height);
 }
 
 void ballMotion(void)
