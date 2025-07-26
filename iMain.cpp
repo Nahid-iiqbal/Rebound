@@ -12,7 +12,7 @@
 gamestate:
 0 = main menu
 1 = game
-2 = game over (i guess)
+2 = game over
 3 = Highscore
 4 = Options
 5 = Help
