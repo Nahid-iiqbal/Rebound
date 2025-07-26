@@ -63,7 +63,7 @@ int prevGameState = 0;
 bool isBallMoving = false;
 bool mm_sound_check = true;
 bool game_sound_check = true;
-int level = 10;
+int level = 1;
 bool loadingDone = false;
 int levelClearedCounter = 0;
 bool levelClearedAnimating = false;
@@ -534,14 +534,14 @@ void iDraw()
         }
         else if (creditsroll)
         {
-            gameState = 9;
             creditscounter = 0;
+            gameState = 9;
             
         }
             else
         {
             iShowImage(0, 0, "assets/images/gameover1.jpg");
-            iSetTransparentColor(0, 0, 0, 0.7);
+            iSetColor(0, 0, 0);
             iFilledRectangle(10, 10, 980, 70);
             iShowImage(63, 20, "assets/images/gom_mainmenu_blue.png");
             iShowImage(375, 20, "assets/images/gom_tryagain_blue.png");
@@ -714,7 +714,6 @@ void iDraw()
     
     else if (gameState == 9) // credits
     {
-        printf("%d\n", creditscounter);
         // iSetColor(255, 255, 255);
         // iText(0, 750/2.0, "-----------------------------------------------------------------------------------------------------------------------------", GLUT_BITMAP_HELVETICA_18);
         // iText(500, 750/2.0, "|", GLUT_BITMAP_HELVETICA_18);
@@ -724,9 +723,9 @@ void iDraw()
             iPlaySound("assets/sounds/last_goodbye.mp3", true);
             lastmusic = 1;
         }
-
+        
         displayCredits();
-
+        
 
     }
     glPopMatrix();
@@ -1339,8 +1338,8 @@ void iKeyboard(unsigned char key)
             }
             else if (prevGameState == 9)
             {
-                gameState = 9;
                 creditscounter = 0;
+                gameState = 9;
             }
             else
             {
@@ -2501,7 +2500,7 @@ void endgame(void)
 void displayCredits(void)
 {
     double alpha;
-    if (creditscounter < 200)
+    if (creditscounter > 0 && creditscounter < 200)
     {
         alpha = (creditscounter > 100) ? 1.0 : (double) creditscounter / 100.0;
         iSetTransparentColor(255, 255, 0, alpha);
@@ -2550,5 +2549,6 @@ void displayCredits(void)
         iStopAllSounds();
         iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
     }
+    printf("%lf\n", alpha);
     creditscounter++;
 }
