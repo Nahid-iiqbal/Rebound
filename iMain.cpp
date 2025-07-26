@@ -5,7 +5,9 @@
 #include "iGraphics.h"
 #include "iSound.h"
 #include <time.h>
-
+#define screen_width 1000
+#define screen_height 750
+#define pi 3.14159
 /*
 gamestate:
 0 = main menu
@@ -22,13 +24,9 @@ gamestate:
 100 = <main_game><paused>  [new experimental notation -rafid]
 */
 
-// variables///////////////////////////////////////////////////////////
-float pi = 3.14159;
+// variables/////////////////////////////////
 int bgchk = 1, mbgchk = 1, mmchannel = -1, gamechannel = -1;
-int chofmm, chofgame;
 float ball_spd = 10.0;
-int screen_width = 1000;
-int screen_height = 750;
 int paddle_width = 150;
 int paddle_height = 20;
 int paddle_x = screen_width / 2 - paddle_width / 2;
@@ -37,18 +35,6 @@ int ball_radius = 10;
 int lives = 3;
 int score = 0;
 int dbx = 0;
-
-// Multiple balls system
-#define MAX_BALLS 50
-typedef struct
-{
-    float x, y;
-    float dx, dy;
-    bool isActive;
-} Ball;
-
-Ball balls[MAX_BALLS];
-int activeBalls = 1;
 bool isGameOver = false;
 bool isFullscreen = false;
 int offset_x = 0, offset_y = 0;
@@ -56,9 +42,7 @@ int gameState = 0;
 char scoreText[10];
 char lifeText[10];
 int gomcheck = 0;
-int max_menu_optn = 1;
 int selected_menu_idx = 1;
-int mainmenu_spacing = 50;
 int prevGameState = 0;
 bool isBallMoving = false;
 bool mm_sound_check = true;
@@ -72,93 +56,24 @@ int endingScreenFlag = 0;
 int creditsroll = 0;
 int creditscounter = 0;
 int lastmusic = 0;
-
-Sprite ball;
-Sprite blocks[5];
-Image ballImg, blockImgs[5];
-
-/// block variables///
-
-float block_width = 65;
-float block_height = 30;
-int block_padding = 3;
-
-// block1 col = 00ffb5, 004d37
-// block2 col = 00aaff, 00334d
-// block3 col = ff4800, 4d1600
-char block_path[5][100] = {
-    "assets/images/blocks/1.png",
-    "assets/images/blocks/2.png",
-    "assets/images/blocks/3.png",
-    "assets/images/blocks/4.png",
-    "assets/images/blocks/5.png"};
-
-int blockGrid[15][15];
-///////////////////////////////powerups//////////////////////////////////////////////
+// Multiple balls system
+#define MAX_BALLS 50
 typedef struct
 {
     float x, y;
-    int type;
-    float height, width;
+    float dx, dy;
     bool isActive;
-} pw;
-pw powerUps[30];
-
-FILE *fpr, *fpw;
-#define MAX_SCORE 10
-#define NAME_LEN 50
-struct HighScores
-{
-    char name[NAME_LEN];
-    int pts;
-};
-struct HighScores highscores[MAX_SCORE];
-char playername[NAME_LEN];
-int nameLength = 0;
-int newrank = 0;
-
-FILE *savefile;
-#define MAX_SLOT 10
-
-struct SavedData
-{
-    char timestamp[30];
-    int score;
-    int level;
-    int lives;
-    int blockState[15][15];
-};
-struct SavedData savedData[MAX_SLOT];
-
-///////////////////////////////////////////////////////////////
-void resetGame(void);
-void mainMenu(void);
-void pauseMenu(void);
-void drawBlocks(void);
-void displayOptions(void);
-void ballMotion(void);
-void toggleFullscreen(void);
-void toggleMenuMusic(void);
-void toggleGameMusic(void);
-void loadScreen(int gamestate);
-void checkCollision(int ballIdx);
-int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
-bool isLevelCleared();
-void loadNextLevel();
-void explode(int i, int j, bool playSound);
-void activePower(int n);
-void loadHighscore(void);
-void displayHighscore(void);
-void updateHighscore(char new_name[], int new_score);
-void loadData(void);
-void displaySavedGames(void);
-int saveGame(int slotIdx);
-void deleteSlot(int slotIndex);
-void endgame(void);\
-void displayCredits(void);
-///////////////////////////////////////////////////////////////
-
-
+} Ball;
+Ball balls[MAX_BALLS];
+int activeBalls = 1;
+/// block variables///////////////////////////
+float block_width = 65;
+float block_height = 30;
+int block_padding = 3;
+// block1 col = 00ffb5, 004d37
+// block2 col = 00aaff, 00334d
+// block3 col = ff4800, 4d1600
+int blockGrid[15][15];
 int levelGrid[10][15][15] = {
     {
         {5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1, 5, 2, 1},
@@ -331,10 +246,69 @@ int levelGrid[10][15][15] = {
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     },
 };
+///////////////////////////////powerups//////////////////////////////////////////////
+typedef struct
+{
+    float x, y;
+    int type;
+    bool isActive;
+} pw;
+pw powerUps[30];
+////////////////////////////////////
+FILE *fpr, *fpw;
+#define MAX_SCORE 10
+#define NAME_LEN 50
+struct HighScores
+{
+    char name[NAME_LEN];
+    int pts;
+};
+struct HighScores highscores[MAX_SCORE];
+char playername[NAME_LEN];
+int nameLength = 0;
+int newrank = 0;
 
-/*
-function iDraw() is called again and again by the system.
-*/
+FILE *savefile;
+#define MAX_SLOT 10
+
+struct SavedData
+{
+    char timestamp[30];
+    int score;
+    int level;
+    int lives;
+    int blockState[15][15];
+};
+struct SavedData savedData[MAX_SLOT];
+
+///////////////////////////////////////////////////////////////
+void resetGame(void);
+void mainMenu(void);
+void pauseMenu(void);
+void drawBlocks(void);
+void displayOptions(void);
+void ballMotion(void);
+void toggleFullscreen(void);
+void toggleMenuMusic(void);
+void toggleGameMusic(void);
+void loadScreen(int gamestate);
+void checkCollision(int ballIdx);
+int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volume);
+bool isLevelCleared();
+void loadNextLevel();
+void explode(int i, int j, bool playSound);
+void activePower(int n);
+void loadHighscore(void);
+void displayHighscore(void);
+void updateHighscore(char new_name[], int new_score);
+void loadData(void);
+void displaySavedGames(void);
+int saveGame(int slotIdx);
+void deleteSlot(int slotIndex);
+void endgame(void);
+void displayCredits(void);
+///////////////////////////////////////////////////////////////
+
 void iDraw()
 {
     iClear();
@@ -476,7 +450,7 @@ void iDraw()
 
         if (level == 10)
         {
-            iSetColor(204,204,255);
+            iSetColor(204, 204, 255);
             iTextTTF(200, screen_height - 200, "HERE YOU DESERVE IT!", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 50);
         }
     }
@@ -522,7 +496,7 @@ void iDraw()
                     updateHighscoreFlag = 1;
                     break;
                 }
-                updateHighscoreFlag = 2; // any value except 0 or 1 would work
+                updateHighscoreFlag = 2;
             }
         }
 
@@ -536,9 +510,8 @@ void iDraw()
         {
             creditscounter = 0;
             gameState = 9;
-            
         }
-            else
+        else
         {
             iShowImage(0, 0, "assets/images/gameover1.jpg");
             iSetColor(0, 0, 0);
@@ -561,9 +534,15 @@ void iDraw()
         }
     }
 
-    // controls menu
     else if (gameState == 3) // highscore
     {
+        static bool highscoresLoaded = false;
+        if (!highscoresLoaded)
+        {
+            loadHighscore();
+            highscoresLoaded = true;
+        }
+
         for (int i = 0; i < MAX_SCORE; i++)
         {
             int pts;
@@ -574,7 +553,6 @@ void iDraw()
                 highscores[i].pts = pts;
             }
         }
-        // prevGameState = gameState;
         displayHighscore();
     }
     else if (gameState == 4)
@@ -675,20 +653,13 @@ void iDraw()
                 iPauseTimer(0);
             }
 
-            // if (!lastmusic)
-            // {
-            //     iStopAllSounds();
-            //     iPlaySound("assets/sounds/last_goodbye.mp3", true, 50);
-            //     lastmusic = 1;
-            // }
-
             static int frameDelay = 0;
             frameDelay++;
 
             if (frameDelay < 100)
             {
                 iSetColor(237, 184, 38);
-                iTextTTF(290, 350, "GAME COMPLETED!", "assets/fonts/Bungee-Regular.ttf", 50);
+                iTextTTF(270, 350, "GAME COMPLETED!", "assets/fonts/Bungee-Regular.ttf", 50);
             }
 
             if (frameDelay > 200)
@@ -701,9 +672,7 @@ void iDraw()
             {
                 levelClearedAnimating = false;
                 frameDelay = 0;
-                // loadNextLevel();
                 endgame();
-
             }
         }
     }
@@ -711,30 +680,21 @@ void iDraw()
     {
         displaySavedGames();
     }
-    
+
     else if (gameState == 9) // credits
     {
-        // iSetColor(255, 255, 255);
-        // iText(0, 750/2.0, "-----------------------------------------------------------------------------------------------------------------------------", GLUT_BITMAP_HELVETICA_18);
-        // iText(500, 750/2.0, "|", GLUT_BITMAP_HELVETICA_18);
         if (!lastmusic)
         {
             iStopAllSounds();
-            iPlaySound("assets/sounds/last_goodbye.mp3", true);
+            iPlaySound("assets/sounds/last_goodbye.mp3");
             lastmusic = 1;
         }
-        
-        displayCredits();
-        
 
+        displayCredits();
     }
     glPopMatrix();
 }
 
-/*
-function iMouseMove() is called when the user moves the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouseMove(int mx, int my)
 {
     mx -= offset_x;
@@ -875,19 +835,10 @@ void iMouseMove(int mx, int my)
     }
 }
 
-/*5unction iMouseDrag() is called when the user presses and drags the mouse.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouseDrag(int mx, int my)
 {
-    // place your codes here
 }
 
-/*
-function iMouse() is called when the user presses/releases the mous
-e.
-(mx, my) is the position where the mouse pointer is.
-*/
 void iMouse(int button, int state, int mx, int my)
 {
     mx -= offset_x;
@@ -944,18 +895,9 @@ void iMouse(int button, int state, int mx, int my)
                 iResumeTimer(0);
                 if (gamechannel != -1)
                     iResumeSound(gamechannel); // Resume the paused music
-                // Remove bgchk = 1; to prevent starting new music
             }
             if (selected_menu_idx == 1)
             {
-                // if (saveGame())
-                // {
-                //     printf("Game saved successfully.\n");
-                // }
-                // else
-                // {
-                //     printf("No Empty Slot Available.\n");
-                // }
                 gameState = 8;
             }
             if (selected_menu_idx == 2)
@@ -969,12 +911,6 @@ void iMouse(int button, int state, int mx, int my)
             {
                 exit(0);
             }
-        }
-    }
-    else if (gameState == 101)
-    {
-        if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-        {
         }
     }
     else if (gameState == 2)
@@ -1059,28 +995,16 @@ void iMouse(int button, int state, int mx, int my)
     }
 }
 
-/*
-function iMouseWheel() is called when the user scrolls the mouse wheel.
-dir = 1 for up, -1 for down.
-*/
 void iMouseWheel(int dir, int mx, int my)
 {
-    // place your code here
 }
 
-/*
-function iKeyboard() is called whenever the user hits a key in keyboard.
-key- holds the ASCII value of the key pressed.
-*/
 void iKeyboard(unsigned char key)
 {
     if (gameState == 0) // main menu
     {
-
         switch (key)
-
         {
-
         case 'w':
         case 'W':
             selected_menu_idx = (selected_menu_idx + 6) % 7;
@@ -1175,15 +1099,6 @@ void iKeyboard(unsigned char key)
             }
             if (selected_menu_idx == 1)
             {
-
-                // if (saveGame())
-                // {
-                //     printf("Game saved successfully.\n");
-                // }
-                // else
-                // {
-                //     printf("No Empty Slot Available.\n");
-                // }
                 gameState = 8;
             }
             if (selected_menu_idx == 2)
@@ -1299,7 +1214,7 @@ void iKeyboard(unsigned char key)
                     prevGameState = 9; // credits
                 else
                     prevGameState = 2;
-                updateHighscoreFlag = 2; // any random value except 0 or 1
+                updateHighscoreFlag = 2;
             }
             else if (key == 8 && nameLength > 0)
             { // Backspace
@@ -1353,7 +1268,6 @@ void iKeyboard(unsigned char key)
 
     if (gameState == 4) // options menu
     {
-        // displayOptions();
         switch (key)
         {
         case 'w':
@@ -1402,7 +1316,6 @@ void iKeyboard(unsigned char key)
 
     if (gameState == 5) // help menu
     {
-        // displayHelp();
         switch (key)
         {
         case 27:
@@ -1416,8 +1329,6 @@ void iKeyboard(unsigned char key)
 
     if (gameState == 6) // load game
     {
-        // load game
-
         switch (key)
         {
         case 'w':
@@ -1518,24 +1429,13 @@ void iKeyboard(unsigned char key)
         }
     }
 }
-/*
-function iSpecialKeyboard() is called whenver user hits special keys likefunction
-keys, home, end, pg up, pg down, arraows etc. you have to use
-appropriate constants to detect them. A list is:
-GLUT_KEY_F1, GLUT_KEY_F2, GLUT_KEY_F3, GLUT_KEY_F4, GLUT_KEY_F5, GLUT_KEY_F6,
-GLUT_KEY_F7, GLUT_KEY_F8, GLUT_KEY_F9, GLUT_KEY_F10, GLUT_KEY_F11,
-GLUT_KEY_F12, GLUT_KEY_LEFT, GLUT_KEY_UP, GLUT_KEY_RIGHT, GLUT_KEY_DOWN,
-GLUT_KEY_PAGE_UP, GLUT_KEY_PAGE_DOWN, GLUT_KEY_HOME, GLUT_KEY_END,
-GLUT_KEY_INSERT */
 
 void iSpecialKeyboard(unsigned char key)
 {
     switch (key)
     {
     case GLUT_KEY_END:
-        // do something
         break;
-    // place your codes for other keys here
     default:
         break;
     }
@@ -1545,7 +1445,6 @@ int main(int argc, char *argv[])
 {
     glutInit(&argc, argv);
     iSetTimer(10, ballMotion);
-    // place your own initialization codes here.
     loadHighscore();
     iInitializeSound();
     iInitialize(screen_width, screen_height, "Rebound by 2405051 and 2405042");
@@ -1607,7 +1506,6 @@ void pauseMenu(void)
     {
         iPauseSound(gamechannel);
     }
-
     iShowImage(50, 255, "assets/images/pm_exittod_white.png");
     iShowImage(50, 315, "assets/images/pm_exittomm_white.png");
     iShowImage(50, 375, "assets/images/pm_save_white.png");
@@ -1627,6 +1525,13 @@ void mainMenu(void)
 
 void drawBlocks(void)
 {
+    const char block_images[5][30] = {
+        "assets/images/blocks/1.png", // Bright Green
+        "assets/images/blocks/2.png", // Bright Blue
+        "assets/images/blocks/3.png", // Orange
+        "assets/images/blocks/4.png", // Light Gray
+        "assets/images/blocks/5.png"  // Bright Red (explosive)
+    };
     for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
@@ -1635,30 +1540,7 @@ void drawBlocks(void)
             {
                 int block_x = 13 + j * block_width;
                 int block_y = screen_height - (i + 1) * block_height - 70;
-
-                switch (blockGrid[i][j])
-                {
-                case 1:
-                    iShowImage(block_x, block_y, "assets/images/blocks/1.png");
-
-                    break; // Bright Green
-                case 2:
-                    iShowImage(block_x, block_y, "assets/images/blocks/2.png");
-
-                    break; // Bright Blue
-                case 3:
-                    iShowImage(block_x, block_y, "assets/images/blocks/3.png");
-
-                    break; // Orange
-                case 4:
-                    iShowImage(block_x, block_y, "assets/images/blocks/4.png");
-
-                    break; // Light Gray
-                case 5:
-                    iShowImage(block_x, block_y, "assets/images/blocks/5.png");
-
-                    break; // Bright Red (explosive)
-                }
+                iShowImage(block_x, block_y, block_images[blockGrid[i][j] - 1]);
             }
         }
     }
@@ -1699,15 +1581,18 @@ void ballMotion(void)
     {
         return;
     }
+    // Count active balls at the start
+    int currentActiveBalls = 0;
 
     for (int ballIdx = 0; ballIdx < MAX_BALLS; ballIdx++)
     {
         if (!balls[ballIdx].isActive)
             continue;
 
+        currentActiveBalls++;
+
         if (!isBallMoving)
         {
-            // Only position the first ball at paddle when not moving
             if (ballIdx == 0)
             {
                 balls[ballIdx].x = (float)paddle_x + dbx + paddle_width / 2;
@@ -1719,7 +1604,13 @@ void ballMotion(void)
         balls[ballIdx].x += balls[ballIdx].dx;
         balls[ballIdx].y += balls[ballIdx].dy;
 
-        // Check collision with blocks
+        if (balls[ballIdx].y < paddle_y)
+        {
+            balls[ballIdx].isActive = false;
+            currentActiveBalls--; 
+            continue;           
+        }
+
         checkCollision(ballIdx);
 
         // Wall collisions
@@ -1730,7 +1621,8 @@ void ballMotion(void)
             else if (balls[ballIdx].x - ball_radius < 0)
                 balls[ballIdx].x = ball_radius;
             balls[ballIdx].dx *= -1;
-            iPlaySound("assets/sounds/bounce.wav", false, 30);
+            if (game_sound_check)
+                iPlaySound("assets/sounds/bounce_border.mp3", false);
         }
 
         if (balls[ballIdx].y + ball_radius > screen_height)
@@ -1738,7 +1630,8 @@ void ballMotion(void)
             if (balls[ballIdx].y + ball_radius > screen_height)
                 balls[ballIdx].y = screen_height - ball_radius;
             balls[ballIdx].dy *= (-1);
-            iPlaySound("assets/sounds/bounce.wav", false, 30);
+            if (game_sound_check)
+                iPlaySound("assets/sounds/bounce_border.mp3", false);
         }
 
         // Paddle collision
@@ -1750,47 +1643,43 @@ void ballMotion(void)
             balls[ballIdx].y = paddle_y + paddle_height + ball_radius;
             float position = ((paddle_x + dbx + paddle_width / 2) - balls[ballIdx].x) / (paddle_width / 2);
             float angle = (pi / 2) + position * (pi / 3);
-            if (balls[ballIdx].dx != 0 && balls[ballIdx].dy != 0)
-                iPlaySound("assets/sounds/bounce.wav", false, 30);
+            if (game_sound_check)
+                iPlaySound("assets/sounds/bounce_border.mp3", false);
             balls[ballIdx].dx = ball_spd * cos(angle);
             balls[ballIdx].dy = ball_spd * sin(angle);
         }
+    }
 
-        // Ball out of bounds (below paddle)
-        if (balls[ballIdx].y < paddle_y)
+    activeBalls = currentActiveBalls;
+
+    if (activeBalls == 0 && isBallMoving)
+    {
+        lives--;
+        ball_spd = 10;
+        if (game_sound_check)
+            iPlaySound("assets/sounds/lifelost.wav", false, 50);
+        dbx = 0;
+
+        if (lives <= 0)
         {
-            balls[ballIdx].isActive = false;
-            activeBalls--;
+            isGameOver = true;
+            gameState = 2;
+            if (game_sound_check)
+                iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
+        }
+        else
+        {
+            isBallMoving = false;
+            activeBalls = 1;
+            balls[0].isActive = true;
+            balls[0].x = paddle_x + dbx + paddle_width / 2;
+            balls[0].y = paddle_height + paddle_y + ball_radius;
+            balls[0].dx = 0;
+            balls[0].dy = 0;
 
-            // If no balls left
-            if (activeBalls == 0)
+            for (int i = 1; i < MAX_BALLS; i++)
             {
-                lives--;
-                ball_spd = 10;
-                iPlaySound("assets/sounds/lifelost.wav", false, 50);
-                dbx = 0;
-
-                if (lives <= 0)
-                {
-                    isGameOver = true;
-                    gameState = 2;
-                    iPlaySound("assets/sounds/mus_gameover.wav", false, 30);
-                }
-                else
-                {
-                    isBallMoving = false;
-                    activeBalls = 1;
-                    balls[0].isActive = true;
-                    balls[0].x = paddle_x + dbx + paddle_width / 2;
-                    balls[0].y = paddle_height + paddle_y + ball_radius;
-                    balls[0].dx = 0;
-                    balls[0].dy = 0;
-                    // Deactivate other balls
-                    for (int i = 1; i < MAX_BALLS; i++)
-                    {
-                        balls[i].isActive = false;
-                    }
-                }
+                balls[i].isActive = false;
             }
         }
     }
@@ -1806,7 +1695,7 @@ void ballMotion(void)
         }
     }
 
-    // power-ups
+    // Update power-ups
     for (int k = 0; k < 30; k++)
     {
         if (powerUps[k].isActive)
@@ -1881,17 +1770,28 @@ void loadScreen(int gamestate)
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
 
-
 // Grok Code:
 void checkCollision(int ballIdx)
 {
     if (balls[ballIdx].y <= 50)
         return; // Skip collision check if ball is too low
 
-    int i, j;
-    for (i = 0; i < 15; i++)
+    float ballLeft = balls[ballIdx].x - ball_radius;
+    float ballRight = balls[ballIdx].x + ball_radius;
+
+    int startCol = (int)((ballLeft - 13) / block_width);
+    int endCol = (int)((ballRight - 13) / block_width);
+    int startRow = (int)((screen_height - balls[ballIdx].y - 70) / block_height);
+    int endRow = startRow + 1;
+
+    startCol = (startCol < 0) ? 0 : (startCol >= 15) ? 14
+                                                     : startCol;
+    endCol = (endCol < 0) ? 0 : (endCol >= 15) ? 14
+                                               : endCol;
+
+    for (int i = startRow; i <= endRow && i < 15; i++)
     {
-        for (j = 0; j < 15; j++)
+        for (int j = startCol; j <= endCol; j++)
         {
             if (blockGrid[i][j] > 0)
             {
@@ -1932,7 +1832,7 @@ void checkCollision(int ballIdx)
                     {
                         blockGrid[i][j] -= 1;
                         score += 50;
-                        if (rand() % 100 < 30 && isBallMoving)
+                        if (rand() % 100 < 20 && isBallMoving)
                         {
                             for (int k = 0; k < 30; k++)
                             {
@@ -1949,7 +1849,6 @@ void checkCollision(int ballIdx)
                     }
                     iPlaySound("assets/sounds/bounce.wav", false, 30);
 
-                    // Spawn power-up (30% chance)
                 }
             }
         }
@@ -1974,15 +1873,25 @@ int playOrResumeSound(int *channelVar, const char *filename, bool loop, int volu
 }
 bool isLevelCleared()
 {
+    static int cachedBlockCount = -1;
+    static bool lastResult = false;
+    int currentBlocks = 0;
     for (int i = 0; i < 15; i++)
     {
         for (int j = 0; j < 15; j++)
         {
             if (blockGrid[i][j] != 0 && blockGrid[i][j] != 4)
-                return false;
+                currentBlocks++;
         }
     }
-    return true;
+
+    if (currentBlocks != cachedBlockCount)
+    {
+        cachedBlockCount = currentBlocks;
+        lastResult = (currentBlocks == 0);
+    }
+
+    return lastResult;
 }
 
 void loadNextLevel()
@@ -2093,7 +2002,6 @@ void activePower(int n)
             }
         }
 
-        // Spawn 1 new ball from each active ball
         for (int sourceIdx = 0; sourceIdx < activeBallCount; sourceIdx++)
         {
             for (int spawn = 0; spawn < 2; spawn++)
@@ -2131,14 +2039,6 @@ void activePower(int n)
         break;
     }
 }
-
-void setup()
-{
-    iInitSprite(&ball);
-    iChangeSpriteFrames(&ball, &ballImg, 1);
-    iSetSpritePosition(&ball, 300, 200);
-}
-
 void loadHighscore(void)
 {
     fpr = fopen("assets/data/score.txt", "r");
@@ -2163,7 +2063,13 @@ void displayHighscore(void)
 {
     gameState = 3;
 
-    loadHighscore();
+    static bool highscoresLoaded = false;
+    if (!highscoresLoaded)
+    {
+        loadHighscore();
+        highscoresLoaded = true;
+    }
+
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
     iSetColor(255, 255, 255); // 03bfeb
@@ -2318,7 +2224,7 @@ void displaySavedGames(void)
     loadData();
     int line = 0;
     iShowImage(0, 0, "assets/images/mainmenublurred.jpg");
-    iSetColor(255, 255, 255); // 03bfeb
+    iSetColor(255, 255, 255);
     iTextTTF(100, screen_height - 100 - line * 40, "Saved Games:", "assets/fonts/Bungee-Regular.ttf", 64);
     line += 3;
 
@@ -2331,7 +2237,7 @@ void displaySavedGames(void)
         sprintf(i_str, "%d", i + 1);
         iTextTTF(100, screen_height - 100 - line * 40, i_str, "assets/fonts/Bungee-Regular.ttf", 30);
         if (i + 1 == selected_menu_idx)
-            iSetColor(245, 245, 67); // f5f543
+            iSetColor(245, 245, 67);
         if (strlen(savedData[i].timestamp))
         {
             char modified_timestamp[25];
@@ -2494,61 +2400,76 @@ void endgame(void)
     isGameOver = true;
     gameState = 2;
     creditsroll = 1;
-
 }
 
 void displayCredits(void)
 {
-    double alpha;
-    if (creditscounter > 0 && creditscounter < 200)
+    static int framedelay = 0;
+    framedelay++;
+    if (framedelay >= 3)
     {
-        alpha = (creditscounter > 100) ? 1.0 : (double) creditscounter / 100.0;
-        iSetTransparentColor(255, 255, 0, alpha);
-        // iShowImage(0, 0, "assets/images/credits1.png");
-        iTextTTF(330, 400, "A Project by", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
-        iSetTransparentColor(255, 255, 255, alpha);
-        iTextTTF(400, 350, "nahid 2405051", "assets/fonts/Bungee-Regular.ttf", 24);
-        iTextTTF(400, 300, "rafid 2405042", "assets/fonts/Bungee-Regular.ttf", 24);
+        framedelay = 0;
+        creditscounter++;
+    }
+    double alpha;
+    if (creditscounter > 0 && creditscounter < 400)
+    {
+        alpha = (creditscounter > 400) ? 1.0 : (double)creditscounter / 200.0;
+        int colorR = (int)(255 * alpha);
+        int colorG = (int)(255 * alpha);
+        int colorB = (int)(255 * alpha);
+        iSetColor(colorR, colorG, 0);
+        iTextTTF(320, 400, "A Project by", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetColor(colorR, colorG, colorB);
+        iTextTTF(390, 350, "nahid 2405051", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(390, 300, "rafid 2405042", "assets/fonts/Bungee-Regular.ttf", 24);
     }
 
-    if (creditscounter >= 250 && creditscounter < 450)
-    {
-        alpha = ((creditscounter - 250) > 100) ? 1.0 : (double)(creditscounter - 250) / 100.0;
-        iSetTransparentColor(255, 255, 0, alpha);
-        // iShowImage(0, 0, "assets/images/credits2.png");
-        iTextTTF(275, 400, "Inspiration from", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
-        iSetTransparentColor(255, 255, 255, alpha);
-        iTextTTF(433, 350, "Arkanoid", "assets/fonts/Bungee-Regular.ttf", 24);
-        iTextTTF(425, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
-    }
-    if (creditscounter >= 500 && creditscounter < 650)
+    if (creditscounter >= 500 && creditscounter < 900)
     {
         alpha = ((creditscounter - 500) > 100) ? 1.0 : (double)(creditscounter - 500) / 100.0;
-        iSetTransparentColor(255, 255, 0, alpha);
-        // iShowImage(0, 0, "assets/images/credits3.png");
+        int colorR = (int)(255 * alpha);
+        int colorG = (int)(255 * alpha);
+        int colorB = (int)(255 * alpha);
+        iSetColor(colorR, colorG, 0);
+        iTextTTF(275, 400, "Inspiration from", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
+        iSetColor(colorR, colorG, colorB);
+        iTextTTF(425, 350, "Arkanoid", "assets/fonts/Bungee-Regular.ttf", 24);
+        iTextTTF(415, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
+    }
+    if (creditscounter >= 1000 && creditscounter < 1300)
+    {
+        alpha = ((creditscounter - 1000) > 100) ? 1.0 : (double)(creditscounter - 1000) / 100.0;
+        int colorR = (int)(255 * alpha);
+        int colorG = (int)(255 * alpha);
+        int colorB = (int)(255 * alpha);
+        iSetColor(colorR, colorG, 0);
         iTextTTF(305, 400, "Resources from", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
-        iSetTransparentColor(255, 255, 255, alpha);
+        iSetColor(colorR, colorG, colorB);
         iTextTTF(330, 350, "non-copyright websites", "assets/fonts/Bungee-Regular.ttf", 24);
         iTextTTF(425, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
     }
-    if (creditscounter >= 700 && creditscounter <= 850)
+    if (creditscounter >= 1400 && creditscounter <= 2210)
     {
-        alpha = ((creditscounter - 700) > 100) ? 1.0 : (double)(creditscounter - 700) / 100.0;
-        iSetTransparentColor(255, 255, 0, alpha);
-        // iShowImage(0, 0, "assets/images/credits4.png");
+        alpha = ((creditscounter - 1400) > 100) ? 1.0 : (double)(creditscounter - 1400) / 100.0;
+        int colorR = (int)(255 * alpha);
+        int colorG = (int)(255 * alpha);
+        int colorB = (int)(255 * alpha);
+        iSetColor(colorR, colorG, 0);
         iTextTTF(265, 400, "Special Thanks to", "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 48);
-        iSetTransparentColor(255, 255, 255, alpha);
+        iSetColor(colorR, colorG, colorB);
         iTextTTF(475, 350, "YOU", "assets/fonts/Bungee-Regular.ttf", 24);
         iTextTTF(390, 300, "For enjoying it.", "assets/fonts/Bungee-Regular.ttf", 24);
     }
-    if (creditscounter > 900)
+    if (creditscounter > 2210)
     {
         creditscounter = 0;
+        framedelay = 0;
         gameState = 0; // go back to main menu
         creditsroll = 0;
+        level = 1;
         iStopAllSounds();
         iPlaySound("assets/sounds/mus_menu6.wav", true, 40);
     }
-    printf("%lf\n", alpha);
     creditscounter++;
 }
