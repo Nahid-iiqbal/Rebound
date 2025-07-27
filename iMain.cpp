@@ -1190,6 +1190,9 @@ void iKeyboard(unsigned char key)
                 }
                 else if (gomcheck == 1)
                 {
+                    level = 1;
+                    score = 0;
+                    lives = 3;
                     resetGame();
                     gameState = 101;
                     isGameOver = false;
