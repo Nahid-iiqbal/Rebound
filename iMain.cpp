@@ -180,7 +180,7 @@ int levelGrid[10][15][15] = {
     {
         {0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0},
         {0, 1, 5, 0, 0, 0, 5, 0, 5, 0, 0, 0, 5, 1, 0},
-        {0, 0, 4, 2, 3, 0, 4, 0, 4, 0, 3, 2, 4, 0, 0},
+        {0, 0, 4, 2, 3, 0, 4, 0, 0, 0, 3, 2, 4, 0, 0},
         {4, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 4},
         {4, 0, 5, 0, 2, 4, 0, 5, 0, 4, 2, 0, 5, 0, 4},
         {4, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 4},
@@ -190,7 +190,7 @@ int levelGrid[10][15][15] = {
         {4, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 4},
         {0, 0, 4, 2, 3, 0, 4, 0, 4, 0, 3, 2, 4, 0, 0},
         {0, 1, 5, 0, 0, 0, 5, 0, 5, 0, 0, 0, 5, 1, 0},
-        {0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0},
+        {0, 0, 0, 4, 4, 4, 3, 1, 3, 4, 4, 4, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0},
         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     },
@@ -2412,9 +2412,9 @@ void displayCredits(void)
         creditscounter++;
     }
     double alpha;
-    if (creditscounter > 0 && creditscounter < 400)
+    if (creditscounter > 0 && creditscounter < 450)
     {
-        alpha = (creditscounter > 400) ? 1.0 : (double)creditscounter / 200.0;
+        alpha = (creditscounter > 450) ? 1.0 : (double)creditscounter / 200.0;
         int colorR = (int)(255 * alpha);
         int colorG = (int)(255 * alpha);
         int colorB = (int)(255 * alpha);
@@ -2425,9 +2425,9 @@ void displayCredits(void)
         iTextTTF(390, 300, "rafid 2405042", "assets/fonts/Bungee-Regular.ttf", 24);
     }
 
-    if (creditscounter >= 500 && creditscounter < 900)
+    if (creditscounter >= 550 && creditscounter < 1000)
     {
-        alpha = ((creditscounter - 500) > 100) ? 1.0 : (double)(creditscounter - 500) / 100.0;
+        alpha = ((creditscounter - 550) > 100) ? 1.0 : (double)(creditscounter - 550) / 100.0;
         int colorR = (int)(255 * alpha);
         int colorG = (int)(255 * alpha);
         int colorB = (int)(255 * alpha);
@@ -2437,9 +2437,9 @@ void displayCredits(void)
         iTextTTF(425, 350, "Arkanoid", "assets/fonts/Bungee-Regular.ttf", 24);
         iTextTTF(415, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
     }
-    if (creditscounter >= 1000 && creditscounter < 1300)
+    if (creditscounter >= 1100 && creditscounter < 1550)
     {
-        alpha = ((creditscounter - 1000) > 100) ? 1.0 : (double)(creditscounter - 1000) / 100.0;
+        alpha = ((creditscounter - 1100) > 100) ? 1.0 : (double)(creditscounter - 1100) / 100.0;
         int colorR = (int)(255 * alpha);
         int colorG = (int)(255 * alpha);
         int colorB = (int)(255 * alpha);
@@ -2449,9 +2449,9 @@ void displayCredits(void)
         iTextTTF(330, 350, "non-copyright websites", "assets/fonts/Bungee-Regular.ttf", 24);
         iTextTTF(425, 300, "Undertale", "assets/fonts/Bungee-Regular.ttf", 24);
     }
-    if (creditscounter >= 1400 && creditscounter <= 2210)
+    if (creditscounter >= 1650 && creditscounter <= 2210)
     {
-        alpha = ((creditscounter - 1400) > 100) ? 1.0 : (double)(creditscounter - 1400) / 100.0;
+        alpha = ((creditscounter - 1650) > 100) ? 1.0 : (double)(creditscounter - 1650) / 100.0;
         int colorR = (int)(255 * alpha);
         int colorG = (int)(255 * alpha);
         int colorB = (int)(255 * alpha);
@@ -2461,7 +2461,7 @@ void displayCredits(void)
         iTextTTF(475, 350, "YOU", "assets/fonts/Bungee-Regular.ttf", 24);
         iTextTTF(390, 300, "For enjoying it.", "assets/fonts/Bungee-Regular.ttf", 24);
     }
-    if (creditscounter > 2210)
+    if (creditscounter > 2300)
     {
         creditscounter = 0;
         framedelay = 0;
