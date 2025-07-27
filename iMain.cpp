@@ -850,6 +850,7 @@ void iMouse(int button, int state, int mx, int my)
             if (selected_menu_idx == 1)
             {
                 // start game
+                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
@@ -1023,6 +1024,7 @@ void iKeyboard(unsigned char key)
             if (selected_menu_idx == 1)
             {
                 // main game
+                level = 1;
                 resetGame();
                 gameState = 101;
                 iResumeTimer(0);
