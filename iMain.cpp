@@ -964,7 +964,7 @@ void iMouse(int button, int state, int mx, int my)
             }
             else if (selected_menu_idx == 3)
             {
-                gameState = prevGameState;
+                gameState = 0;
             }
         }
     }
@@ -1285,7 +1285,7 @@ void iKeyboard(unsigned char key)
             break;
         case 27:
             mbgchk = 1;
-            gameState = prevGameState;
+            gameState = 0;
             prevGameState = 4;
             break;
         case ' ':
@@ -1325,7 +1325,7 @@ void iKeyboard(unsigned char key)
         {
         case 27:
             mbgchk = 1;
-            gameState = prevGameState;
+            gameState = 0;
             break;
         default:
             break;
