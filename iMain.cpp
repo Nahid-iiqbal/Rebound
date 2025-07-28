@@ -127,18 +127,18 @@ int levelGrid[10][15][15] = {
         {2, 2, 2, 3, 3, 3, 1, 1, 1, 2, 2, 2, 3, 3, 3},
     },
     {
-        {1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3},
+        {1, 2, 3, 4, 1, 2, 3, 4, 1, 5, 3, 4, 1, 2, 3},
         {4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4},
-        {3, 0, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 0, 3},
+        {5, 0, 1, 5, 3, 4, 1, 2, 3, 4, 1, 2, 3, 0, 3},
         {2, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 2},
-        {1, 0, 3, 0, 1, 2, 3, 4, 1, 2, 3, 0, 3, 0, 1},
+        {1, 0, 3, 0, 1, 2, 3, 4, 1, 2, 3, 0, 3, 0, 5},
         {2, 0, 2, 0, 4, 0, 0, 0, 0, 0, 4, 0, 2, 0, 2},
-        {3, 0, 1, 0, 3, 0, 1, 2, 3, 0, 3, 0, 1, 0, 3},
-        {4, 0, 4, 0, 2, 0, 4, 0, 2, 0, 2, 0, 4, 0, 4},
+        {3, 0, 1, 0, 3, 0, 1, 2, 3, 0, 5, 0, 1, 0, 3},
+        {4, 0, 4, 0, 2, 0, 5, 0, 2, 0, 2, 0, 4, 0, 4},
         {1, 0, 3, 0, 1, 0, 3, 0, 1, 0, 1, 0, 3, 0, 1},
         {2, 0, 2, 0, 4, 0, 2, 0, 4, 0, 4, 0, 2, 0, 2},
         {3, 0, 1, 0, 3, 0, 1, 2, 3, 0, 3, 0, 1, 0, 3},
-        {4, 0, 4, 0, 2, 0, 0, 0, 0, 0, 2, 0, 4, 0, 4},
+        {4, 0, 4, 0, 5, 0, 0, 0, 0, 0, 2, 0, 4, 0, 4},
         {1, 0, 3, 0, 1, 2, 3, 4, 1, 2, 3, 0, 3, 0, 1},
         {2, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 2},
         {3, 4, 3, 2, 1, 4, 3, 2, 1, 4, 3, 2, 1, 4, 1},
@@ -384,13 +384,13 @@ void iDraw()
         iSetColor(255, 0, 0);
         iShowImage(20, screen_height - 40, "assets/images/score.png");
         sprintf(scoreText, "%d", score);
-        iTextBold(150, screen_height - 27, scoreText, GLUT_BITMAP_HELVETICA_18);
+        iTextTTF(150, screen_height - 25, scoreText, "assets/fonts/GrenzeGotisch-VariableFont_wght.ttf", 30);
         iShowImage(850, screen_height - 40, "assets/images/lives.png");
         sprintf(lifeText, "%d", lives);
-        iTextBold(950, screen_height - 27, lifeText, GLUT_BITMAP_HELVETICA_18);
+        iTextTTF(950, screen_height - 25, lifeText, "assets/fonts/GrenzeGotisch-VariableFont_wght.ttf", 30);
         char levelText[20];
         sprintf(levelText, "Level: %d", level);
-        iTextTTF(390, screen_height - 30, levelText, "assets/fonts/BitcountGridDouble_Cursive-Light.ttf", 30);
+        iTextTTF(440, screen_height - 30, levelText, "assets/fonts/Bungee-Regular.ttf", 30);
         if (bgchk && game_sound_check)
         {
             playOrResumeSound(&gamechannel, "assets/sounds/gamebg1.wav", true, 40);
