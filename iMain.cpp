@@ -19,6 +19,7 @@ gamestate:
 6 = Load Game
 7 = level Cleared screen
 8 = Display saved games
+9 = credits
 
 110 = <main_game><level 1><base>
 100 = <main_game><paused>  [new experimental notation -rafid]
