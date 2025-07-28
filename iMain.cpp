@@ -1770,28 +1770,15 @@ void loadScreen(int gamestate)
     iTextTTF(450, 50, "Please wait...", "assets/fonts/RubikDoodleShadow-Regular.ttf", 33);
 }
 
-// Grok Code:
 void checkCollision(int ballIdx)
 {
     if (balls[ballIdx].y <= 50)
-        return; // Skip collision check if ball is too low
+        return;
 
-    float ballLeft = balls[ballIdx].x - ball_radius;
-    float ballRight = balls[ballIdx].x + ball_radius;
-
-    int startCol = (int)((ballLeft - 13) / block_width);
-    int endCol = (int)((ballRight - 13) / block_width);
-    int startRow = (int)((screen_height - balls[ballIdx].y - 70) / block_height);
-    int endRow = startRow + 1;
-
-    startCol = (startCol < 0) ? 0 : (startCol >= 15) ? 14
-                                                     : startCol;
-    endCol = (endCol < 0) ? 0 : (endCol >= 15) ? 14
-                                               : endCol;
-
-    for (int i = startRow; i <= endRow && i < 15; i++)
+    int i, j;
+    for (i = 0; i < 15; i++)
     {
-        for (int j = startCol; j <= endCol; j++)
+        for (j = 0; j < 15; j++)
         {
             if (blockGrid[i][j] > 0)
             {
@@ -1832,7 +1819,7 @@ void checkCollision(int ballIdx)
                     {
                         blockGrid[i][j] -= 1;
                         score += 50;
-                        if (rand() % 100 < 20 && isBallMoving)
+                        if (rand() % 100 < 30 && isBallMoving)
                         {
                             for (int k = 0; k < 30; k++)
                             {
@@ -1849,6 +1836,7 @@ void checkCollision(int ballIdx)
                     }
                     iPlaySound("assets/sounds/bounce.wav", false, 30);
 
+                    // Spawn power-up (30% chance)
                 }
             }
         }
